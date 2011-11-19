@@ -1,7 +1,7 @@
 #!/bin/bash 
 
-# Small image gallery script
-# 2011 (c) Paul C. Buetow
+# Small quick n dirty photo album script
+# 2011 (c) Dipl.-Inform (FH) Paul Buetow
 
 declare -i THUMBGEOMETRY=250
 declare -i GEOMETRY=800
