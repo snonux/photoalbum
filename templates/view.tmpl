@@ -1,0 +1,12 @@
+cat <<END
+<a href="${num}-$((i-1)).html">&lt;&lt;&lt;</a>
+<a href="page-${num}.html#$jpg">Thumbnails</a>
+<a href="${num}-$((i+1)).html">&gt;&gt;&gt;</a>
+<br />
+<br />
+<a href="${num}-$((i+1)).html"><img border='0' src='../photos/$jpg' /></a>
+<br />
+<br />
+<a href="../photos/$jpg">Direct link</a>
+<h3>$jpg</h3>
+END

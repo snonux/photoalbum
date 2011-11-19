@@ -1,0 +1,21 @@
+TOC:
+01. HELLO WORLD
+02. QUICK START GUIDE
+03. CONFIGURATION
+
+01. HELLO WORLD
+
+photoalbum is a minimal bash script for linux to generate static web photo albums.
+
+02. QUICK START GUIDE:
+
+* Copy all images wanted to ./incoming
+
+* Run the script
+
+* Open index.html
+
+03. CONFIGURATION
+
+Edit the script header.
+
