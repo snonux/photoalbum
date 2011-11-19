@@ -10,6 +10,12 @@ declare -i MAXPREVIEWS=100
 declare -r TITLE='Picture gallery'
 declare -r INCOMING=./incoming
 
+createdirs () {
+        for dir in photos thumbs html; do 
+                [ -d $dir ] || mkdir -vp $dir
+        done
+}
+
 template () {
 	local -r template=$1
 	local -r html=$2
@@ -105,4 +111,5 @@ generate () {
 
 scale
 rm html/*.html 2>/dev/null
+createdirs
 generate 1
