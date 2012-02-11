@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash -x
 
 # Small quick n dirty photo album script
 # 2011 (c) Dipl.-Inform (FH) Paul Buetow
