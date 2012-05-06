@@ -109,7 +109,7 @@ generate () {
 	done
 }
 
+createdirs
 scale
 rm html/*.html 2>/dev/null
-createdirs
 generate 1
