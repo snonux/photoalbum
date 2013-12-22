@@ -18,11 +18,7 @@ photoalbum is a minimal bash script for linux to generate static web photo album
 
 * Distribute the ./dist directory
 
-03. CONFIGURATION
-
-Edit the script header.
-
-04. HTML TEMPLATES
+03. HTML TEMPLATES
 
 Go to the ./templates directory and edit them as wished.
 
