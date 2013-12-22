@@ -112,4 +112,5 @@ function generate () {
 createdirs
 scale
 find ./html -type f -name \*.html -delete
+cd html && template index index && cd ..
 generate 1
