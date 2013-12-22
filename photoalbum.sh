@@ -113,7 +113,6 @@ function generate () {
       redirectpage=$(( page+1 ))-1
     else
       redirectpage=${page}-${lastview}
-      echo "template redirect 0-${MAXPREVIEWS}"
       template redirect 0-${MAXPREVIEWS}
 
       redirectpage=1-1
@@ -123,18 +122,22 @@ function generate () {
   done
 }
 
+function tarball () {
+  # Cleanup tarball from prev run if any
+  find ./dist/ -maxdepth 1 -type f -name \*.tar -delete
+
+  if [ "${INCLUDETARBALL}" = 'yes' ]; then
+    echo Creating tarball
+    mv "${INCOMING}" "${TARBALLNAME}" 
+    tar $TAROPTS  -f "./dist/${TARBALLNAME}${TARBALLSUFFIX}" "${TARBALLNAME}"
+    mv "${TARBALLNAME}" "${INCOMING}"
+  fi
+}
+
 createdirs
 scale
 find ./dist/ -type f -name \*.html -delete
 template index index ./dist
 generate
+tarball
 
-# Cleanup tarball from prev run if any
-find ./dist/ -maxdepth 1 -type f -name \*.tar -delete
-
-if [ "${INCLUDETARBALL}" = 'yes' ]; then
-  echo Creating tarball
-  mv "${INCOMING}" "${TARBALLNAME}" 
-  tar $TAROPTS  -f "./dist/${TARBALLNAME}${TARBALLSUFFIX}" "${TARBALLNAME}"
-  mv "${TARBALLNAME}" "${INCOMING}"
-fi
