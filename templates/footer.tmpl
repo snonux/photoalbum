@@ -1,6 +1,15 @@
 cat <<END
 </p>
 <hr />
+END
+
+if [ "${INCLUDETARBALL}" = 'yes' ]; then
+cat <<END
+Download all photos in original size <a href='../${TARBALLNAME}${TARBALLSUFFIX}'>here</a><br /><br />
+END
+fi
+
+cat <<END
 Page generated at $(date) using Bash, ImageMagick and Git at $(uname); &lt;photoalbum@mx.buetow.org&gt;
 </body>
 </html>

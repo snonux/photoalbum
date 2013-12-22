@@ -5,65 +5,61 @@
 
 source photoalbum.conf
 
-function createdirs () {
-  for dir in photos thumbs html; do 
-    [ -d ${dir} ] || mkdir -vp ${dir}
-  done
-}
-
 function template () {
   local -r template=${1} ; shift
   local -r html=${1}     ; shift
   local destdir=${1}     ; shift
 
   if [ -z "${destdir}" ]; then
-    destdir=html/
+    destdir=./dist/html/
   fi
 
   if [ -d ./templates/ ]; then
-    source ./templates/${template}.tmpl >> ./${destdir}/${html}.html
+    source ./templates/${template}.tmpl >> ${destdir}/${html}.html
   else
-    source ../templates/${template}.tmpl >> ../${destdir}/${html}.html
+    source ../../templates/${template}.tmpl >> ../../${destdir}/${html}.html
   fi
+}
+
+function createdirs () {
+  for dir in ./dist/{photos,thumbs,html}; do 
+    [ -d ${dir} ] || mkdir -vp ${dir}
+  done
 }
 
 function scale () {
-  cd ${INCOMING} && find ./ -type f | sort | while read photo; do
-  if [ ! -f "../photos/${photo}" ]; then
-
+  cd "${INCOMING}" || exit 1
+  find . -type f | sed 's#^\./##' | 
+  while read photo; do
     # Flatten directories / to __
-    if [[ "${photo}" =~ / ]]; then
-      destphoto="${photo//\//__}"
-    else
-      destphoto="${photo}"
+    destphoto="${photo//\//__}"
+
+    if [ ! -f "../dist/photos/${destphoto}" ]; then
+      echo "Scaling ${photo} to ../dist/photos/${destphoto}"
+
+      convert -auto-orient \
+        -geometry ${GEOMETRY} "${photo}" "../dist/photos/${destphoto}"
     fi
-
-    destphoto="${destphoto//./}"
-
-    echo "Scaling ${photo} to ../photos/${destphoto}"
-
-    convert -auto-orient \
-      -geometry ${GEOMETRY} "${photo}" "../photos/${destphoto}"
-  fi
   done
+  cd - &>/dev/null
 
   echo 'Removing spaces from file names'
-  find ../photos -type f -name '* *' | while read file; do
+  find ./dist/photos -type f -name '* *' | while read file; do
     rename 's/ /_/g' "${file}" 
   done
-
-  cd ..
 }
 
 function generate () {
-  local num=${1} ; shift
+  local num=1
   local name=page-${num}
   local -i i=0
 
   template header ${name} 
   template header-first-add ${name}
 
-  cd photos && find ./ -type f | sort | sed 's;^\./;;' |
+  cd ./dist/photos || exit 1
+
+  find ./ -type f | sort | sed 's#^\./##' |
   while read photo; do 
     : $(( i++ ))
 
@@ -96,17 +92,15 @@ function generate () {
     fi
   done
 
-  cd ..
-  template footer $(cd html;ls -t page-*.html | head -n 1 | sed 's/.html//')
+  cd - &>/dev/null
 
-  ls html/*.html | grep -v page- | cut -d'-' -f1 | uniq | 
+  template footer $(cd ./dist/html;ls -t page-*.html | head -n 1 | sed 's/.html//')
+
+  ls ./dist/html/*.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
 
-    declare page=$(ls -t ${prefix}-*.html |
-    head -n 1 | sed 's#html/\(.*\)-.*.html#\1#')
-
-    declare lastview=$(ls -t ${prefix}-*.html |
-    head -n 1 | sed 's/.*-\(.*\).html/\1/')
+    declare page=$(ls -t ${prefix}-*.html | head -n 1 | sed 's#./dist/html/\(.*\)-.*.html#\1#')
+    declare lastview=$(ls -t ${prefix}-*.html | head -n 1 | sed 's/.*-\(.*\).html/\1/')
 
     declare prevredirect=${page}-0
     declare nextredirect=${page}-$((lastview+1))
@@ -129,6 +123,16 @@ function generate () {
 
 createdirs
 scale
-find ./html -type f -name \*.html -delete
-generate 1
-template index index .
+find ./dist/html -type f -name \*.html -delete
+template index index ./dist
+generate
+
+if [ "${INCLUDETARBALL}" = 'yes' ]; then
+  echo Creating tarball
+  mv "${INCOMING}" "${TARBALLNAME}" 
+  tar $TAROPTS  -f "./dist/${TARBALLNAME}${TARBALLSUFFIX}" "${TARBALLNAME}"
+  mv "${TARBALLNAME}" "${INCOMING}"
+else
+  # Cleanup tarball from prev run if any
+  find ./dist/ -maxdepth 1 -type f -name \*.tar -delete
+fi
