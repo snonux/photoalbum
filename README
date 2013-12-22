@@ -12,9 +12,11 @@ photoalbum is a minimal bash script for linux to generate static web photo album
 
 * Copy all images wanted to ./incoming
 
+* Edit photoalbum.conf
+
 * Run "make"
 
-* Open index.html
+* Distribute the ./dist directory
 
 03. CONFIGURATION
 
