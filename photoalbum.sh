@@ -44,7 +44,8 @@ function scale () {
   cd - &>/dev/null
 
   echo 'Removing spaces from file names'
-  find ./dist/photos -type f -name '* *' | while read file; do
+  find ./dist/photos -type f -name '* *' |
+  while read file; do
     rename 's/ /_/g' "${file}" 
   done
 }
@@ -112,18 +113,21 @@ function generate () {
       redirectpage=$(( page+1 ))-1
     else
       redirectpage=${page}-${lastview}
+      echo "template redirect 0-${MAXPREVIEWS}"
       template redirect 0-${MAXPREVIEWS}
 
       redirectpage=1-1
     fi
 
+    echo "redirectpage: $redirectpage"
+    echo "template redirect ${next}redirect"
     template redirect ${next}redirect
   done
 }
 
 createdirs
 scale
-find ./dist/html -type f -name \*.html -delete
+find ./dist/ -type f -name \*.html -delete
 template index index ./dist
 generate
 
