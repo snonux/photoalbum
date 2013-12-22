@@ -1,8 +1,5 @@
 #!/bin/bash 
 
-# Small quick n dirty photo album script
-# 2011, 2012, 2013 Paul Buetow
-
 source photoalbum.conf
 
 function createdirs () {
