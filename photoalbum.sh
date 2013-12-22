@@ -111,5 +111,5 @@ function generate () {
 
 createdirs
 scale
-bash -c 'rm html/*.html; exit 0' &>/dev/null
+find ./html -type f -name \*.html -delete
 generate 1
