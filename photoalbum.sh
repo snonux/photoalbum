@@ -129,12 +129,12 @@ find ./dist/ -type f -name \*.html -delete
 template index index ./dist
 generate
 
+# Cleanup tarball from prev run if any
+find ./dist/ -maxdepth 1 -type f -name \*.tar -delete
+
 if [ "${INCLUDETARBALL}" = 'yes' ]; then
   echo Creating tarball
   mv "${INCOMING}" "${TARBALLNAME}" 
   tar $TAROPTS  -f "./dist/${TARBALLNAME}${TARBALLSUFFIX}" "${TARBALLNAME}"
   mv "${TARBALLNAME}" "${INCOMING}"
-else
-  # Cleanup tarball from prev run if any
-  find ./dist/ -maxdepth 1 -type f -name \*.tar -delete
 fi
