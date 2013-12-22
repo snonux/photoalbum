@@ -97,9 +97,9 @@ function generate () {
 
   template footer $(cd ./dist/html;ls -t page-*.html | head -n 1 | sed 's/.html//')
 
+  # Generate HTTP redirect pages
   ls ./dist/html/*.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
-
     declare page=$(ls -t ${prefix}-*.html | head -n 1 | sed 's#./dist/html/\(.*\)-.*.html#\1#')
     declare lastview=$(ls -t ${prefix}-*.html | head -n 1 | sed 's/.*-\(.*\).html/\1/')
 
@@ -119,9 +119,7 @@ function generate () {
       redirectpage=1-1
     fi
 
-    echo "redirectpage: $redirectpage"
-    echo "template redirect ${next}redirect"
-    template redirect ${next}redirect
+    template redirect ${nextredirect}
   done
 }
 
