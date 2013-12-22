@@ -30,9 +30,20 @@ function template () {
 function scale () {
   cd ${INCOMING} && find ./ -type f | sort | while read photo; do
   if [ ! -f "../photos/${photo}" ]; then
-    echo "Scaling ${photo}"
+
+    # Flatten directories / to __
+    if [[ "${photo}" =~ / ]]; then
+      destphoto="${photo//\//__}"
+    else
+      destphoto="${photo}"
+    fi
+
+    destphoto="${destphoto//./}"
+
+    echo "Scaling ${photo} to ../photos/${destphoto}"
+
     convert -auto-orient \
-      -geometry ${GEOMETRY} "${photo}" "../photos/${photo}"
+      -geometry ${GEOMETRY} "${photo}" "../photos/${destphoto}"
   fi
   done
 
