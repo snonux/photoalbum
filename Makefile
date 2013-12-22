@@ -2,7 +2,7 @@ all: generate dist
 generate:
 	./generate_album.sh
 clean:
-	rm -Rf dist *.html photos 
+	rm -Rf dist photos 
 dist:
 	rm -Rf dist 2>/dev/null
 	mkdir dist
