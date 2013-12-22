@@ -23,11 +23,11 @@ function template () {
 }
 
 function scale () {
-  cd $INCOMING && find ./ -iname \*.jpg | sort | while read jpg; do
-  if [ ! -f "../photos/$jpg" ]; then
-    echo "Scaling $jpg"
+  cd $INCOMING && find ./ -type f | sort | while read photo; do
+  if [ ! -f "../photos/$photo" ]; then
+    echo "Scaling $photo"
     convert -auto-orient \
-      -geometry $GEOMETRY "$jpg" "../photos/$jpg"
+      -geometry $GEOMETRY "$photo" "../photos/$photo"
   fi
   done
 
@@ -47,8 +47,8 @@ function generate () {
   template header $name 
   template header-first-add $name
 
-  cd photos && find ./ -iname \*.jpg | sort | sed 's;^\./;;' | 
-  while read jpg; do 
+  cd photos && find ./ -type f | sort | sed 's;^\./;;' | 
+  while read photo; do 
     : $(( i++ ))
 
     if [ $i -gt $MAXPREVIEWS ]; then
@@ -73,10 +73,10 @@ function generate () {
     template view ${num}-${i}
     template footer ${num}-${i}
 
-    if [ ! -f "../thumbs/$jpg" ]; then 
-      echo "Creating thumb for $jpg";
-      convert -geometry x$THUMBGEOMETRY "$jpg" \
-        "../thumbs/$jpg"
+    if [ ! -f "../thumbs/$photo" ]; then 
+      echo "Creating thumb for $photo";
+      convert -geometry x$THUMBGEOMETRY "$photo" \
+        "../thumbs/$photo"
     fi
   done
 
