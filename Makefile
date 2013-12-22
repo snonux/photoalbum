@@ -1,6 +1,6 @@
 all: generate dist
 generate:
-	./generate_album.sh
+	./photoalbum.sh
 clean:
 	rm -Rf dist photos 
 dist:
