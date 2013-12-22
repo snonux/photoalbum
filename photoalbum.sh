@@ -49,12 +49,11 @@ function generate () {
 
   cd photos && find ./ -iname \*.jpg | sort | sed 's;^\./;;' | 
   while read jpg; do 
-
-    (( i++ ))
+    : $(( i++ ))
 
     if [ $i -gt $MAXPREVIEWS ]; then
       i=1
-      (( num++ ))
+      : $(( num++ ))
 
       next=page-${num}
       template next $name
