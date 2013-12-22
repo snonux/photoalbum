@@ -12,9 +12,9 @@ function createdirs () {
 }
 
 function template () {
-  local -r template=${1}
-  local -r html=$2
-  local destdir=$3
+  local -r template=${1} ; shift
+  local -r html=${1}     ; shift
+  local destdir=${1}     ; shift
 
   if [ -z "${destdir}" ]; then
     destdir=html/
@@ -45,7 +45,7 @@ function scale () {
 }
 
 function generate () {
-  local num=${1}
+  local num=${1} ; shift
   local name=page-${num}
   local -i i=0
 
