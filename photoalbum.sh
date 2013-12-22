@@ -27,9 +27,15 @@ function scale () {
   if [ ! -f "../photos/$jpg" ]; then
     echo "Scaling $jpg"
     convert -auto-orient \
-      -geometry $GEOMETRY "$jpg" "../photos/$jpg;"
+      -geometry $GEOMETRY "$jpg" "../photos/$jpg"
   fi
   done
+
+  echo 'Removing spaces from file names'
+  find ../photos -type f -name '* *' | while read file; do
+    rename 's/ /_/g' "$file" 
+  done
+
   cd ..
 }
 
@@ -74,8 +80,8 @@ function generate () {
         "../thumbs/$jpg"
     fi
   done
-  cd ..
 
+  cd ..
   template footer $(cd html;ls -t page-*.html | head -n 1 | sed 's/.html//')
 
   ls html/*.html | grep -v page- | cut -d'-' -f1 | uniq | 
