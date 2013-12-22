@@ -14,11 +14,16 @@ function createdirs () {
 function template () {
   local -r template=$1
   local -r html=$2
+  local destdir=$3
+
+  if [ -z "$destdir" ]; then
+    destdir=html/
+  fi
 
   if [ -d ./templates/ ]; then
-    source ./templates/${template}.tmpl >> ./html/${html}.html
+    source ./templates/${template}.tmpl >> ./${destdir}/${html}.html
   else
-    source ../templates/${template}.tmpl >> ../html/${html}.html
+    source ../templates/${template}.tmpl >> ../${destdir}/${html}.html
   fi
 }
 
@@ -112,5 +117,5 @@ function generate () {
 createdirs
 scale
 find ./html -type f -name \*.html -delete
-cd html && template index index && cd ..
 generate 1
+template index index .

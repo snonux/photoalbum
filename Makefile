@@ -7,4 +7,4 @@ dist:
 	rm -Rf dist 2>/dev/null
 	mkdir dist
 	mv thumbs html photos dist
-	cp index.html dist
+	mv index.html ./dist
