@@ -1,0 +1,5 @@
+photoalbum (0.0.0) stable; urgency=low
+
+  * Initial Debian package of photoalbum.
+
+ -- Paul Buetow <paul@buetow.org>  Fri, 26 Jul 2013 23:08:54 +0200

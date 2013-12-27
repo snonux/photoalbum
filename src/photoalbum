@@ -2,6 +2,8 @@
 
 source photoalbum.conf
 
+declare -r VERSION='PHOTOALBUMVERSION'
+
 function createdirs () {
   for dir in photos thumbs html; do 
     [ -d ${dir} ] || mkdir -vp ${dir}

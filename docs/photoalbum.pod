@@ -1,0 +1,22 @@
+=head1 NAME
+
+cpuinfo - A small and humble tool to print out CPU data
+
+=head1 SYNOPSIS
+
+cpuinfo 
+
+=head2 How this works?
+
+This just invokes AWK to parse /proc/cpuinfo and prints out some stuff but
+human readable.
+
+=head1 LICENSE
+
+See package description or project website.
+
+=head1 AUTHOR
+
+Paul Buetow - <http://cpuinfo.buetow.org>
+
+=cut
