@@ -1,7 +1,6 @@
 #!/bin/bash 
 
-source photoalbum.conf
-
+declare -r ARG="${1}" ; shift
 declare -r VERSION='PHOTOALBUMVERSION'
 
 function createdirs () {
@@ -27,7 +26,7 @@ function template () {
 }
 
 function scale () {
-  cd ${INCOMING} && find ./ -type f | sort | while read photo; do
+  cd ${INCOMING_DIR} && find ./ -type f | sort | while read photo; do
   if [ ! -f "../photos/${photo}" ]; then
 
     # Flatten directories / to __
@@ -54,7 +53,7 @@ function scale () {
   cd ..
 }
 
-function generate () {
+function makedist () {
   local num=${1} ; shift
   local name=page-${num}
   local -i i=0
@@ -126,8 +125,41 @@ function generate () {
   done
 }
 
-createdirs
-scale
-find ./html -type f -name \*.html -delete
-generate 1
-template index index .
+function init () {
+  [ ! -d "${INCOMING_DIR}" ] && mkdir "${INCOMING_DIR}" && echo "Created ${INCOMING_DIR}"
+  [ -d ./dist ] && rm -rf ./dist && echo Cleaned up ./dist
+  mkdir ./dist && echo Created ./dist
+}
+
+function generate () {
+  if [ ! -d "${INCOMING_DIR}" ]; then
+    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
+    exit 1
+  fi
+
+  createdirs
+  scale
+  find ./html -type f -name \*.html -delete
+  makedist 1
+  template index index .
+}
+
+if [ -f ~/.photoalbumrc ]; then
+  source ~/.photoalbumrc
+else
+  source /etc/default/photoalbum
+fi
+
+case "${ARG}" in
+  init)
+    init
+    ;;
+  generate)
+    generate
+    ;;
+  *)
+    usage
+    ;;
+esac
+
+

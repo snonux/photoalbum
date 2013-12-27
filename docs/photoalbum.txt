@@ -1,16 +1,25 @@
 NAME
-    cpuinfo - A small and humble tool to print out CPU data
+    photoalbum - photoalbum is a minimal bash script for linux to generate
+    static web photo albums.
 
 SYNOPSIS
-    cpuinfo
+    photoalbum
 
-  How this works?
-    This just invokes AWK to parse /proc/cpuinfo and prints out some stuff
-    but human readable.
+  QUICK START GUIDE:
+    * Copy all images wanted to ./incoming
+
+    * Edit photoalbum.conf
+
+    * Run "make"
+
+    * Distribute the ./dist directory
+
+   HTML TEMPLATES
+    Go to the templates directory and edit them as wished.
 
 LICENSE
     See package description or project website.
 
 AUTHOR
-    Paul Buetow - <http://cpuinfo.buetow.org>
+    Paul Buetow - <http://photoalbum.buetow.org>
 
