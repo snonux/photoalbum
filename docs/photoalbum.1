@@ -133,14 +133,18 @@
 photoalbum \- photoalbum is a minimal bash script for linux to generate static web photo albums.
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-photoalbum
+photoalbum [init|generate]
 .SS "\s-1QUICK\s0 \s-1START\s0 \s-1GUIDE:\s0"
 .IX Subsection "QUICK START GUIDE:"
+* See if /etc/default/photoalbum fits your needs. If not, read on.
+.PP
+* Copy /etc/default/photoalbum to ~/.photoalbumrc in order to customize it.
+.PP
+* Run 'photoalbum init'
+.PP
 * Copy all images wanted to ./incoming
 .PP
-* Edit photoalbum.conf
-.PP
-* Run \*(L"make\*(R"
+* Run 'photoalbum generate'
 .PP
 * Distribute the ./dist directory
 .PP

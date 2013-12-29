@@ -3,14 +3,19 @@ NAME
     static web photo albums.
 
 SYNOPSIS
-    photoalbum
+    photoalbum [init|generate]
 
   QUICK START GUIDE:
+    * See if /etc/default/photoalbum fits your needs. If not, read on.
+
+    * Copy /etc/default/photoalbum to ~/.photoalbumrc in order to customize
+    it.
+
+    * Run 'photoalbum init'
+
     * Copy all images wanted to ./incoming
 
-    * Edit photoalbum.conf
-
-    * Run "make"
+    * Run 'photoalbum generate'
 
     * Distribute the ./dist directory
 

@@ -1,33 +1,52 @@
 #!/bin/bash 
 
-declare -r ARG="${1}" ; shift
-declare -r VERSION='PHOTOALBUMVERSION'
+declare -r ARG1="${1}" ; shift
+declare -r VERSION='0.0.0'
 
-function createdirs () {
-  for dir in photos thumbs html; do 
-    [ -d ${dir} ] || mkdir -vp ${dir}
+function usage () {
+cat - <<USAGE >&2
+Usage: 
+  $0 [clean|init|version|generate]
+USAGE
+}
+
+function init () {
+  for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
+    [ -d "${dir}" ] || mkdir -vp "${dir}"
   done
+}
+
+function clean () {
+  echo "Not deleting ${INCOMING_DIR}"
+  [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
+}
+
+function generate () {
+  if [ ! -d "${INCOMING_DIR}" ]; then
+    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
+    exit 1
+  fi
+  if [ ! -d "${DIST_DIR}" ]; then
+    echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
+    exit 1
+  fi
+
+  scale
+  find "${DIST_DIR}/html" -type f -name \*.html -delete
+  makedist 1
+  template index ../index
 }
 
 function template () {
   local -r template=${1} ; shift
   local -r html=${1}     ; shift
-  local destdir=${1}     ; shift
 
-  if [ -z "${destdir}" ]; then
-    destdir=html/
-  fi
-
-  if [ -d ./templates/ ]; then
-    source ./templates/${template}.tmpl >> ./${destdir}/${html}.html
-  else
-    source ../templates/${template}.tmpl >> ../${destdir}/${html}.html
-  fi
+  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
 }
 
 function scale () {
-  cd ${INCOMING_DIR} && find ./ -type f | sort | while read photo; do
-  if [ ! -f "../photos/${photo}" ]; then
+  cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
+  if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
 
     # Flatten directories / to __
     if [[ "${photo}" =~ / ]]; then
@@ -38,19 +57,17 @@ function scale () {
 
     destphoto="${destphoto//./}"
 
-    echo "Scaling ${photo} to ../photos/${destphoto}"
+    echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
 
     convert -auto-orient \
-      -geometry ${GEOMETRY} "${photo}" "../photos/${destphoto}"
+      -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
   fi
   done
 
   echo 'Removing spaces from file names'
-  find ../photos -type f -name '* *' | while read file; do
+  find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
     rename 's/ /_/g' "${file}" 
   done
-
-  cd ..
 }
 
 function makedist () {
@@ -61,7 +78,7 @@ function makedist () {
   template header ${name} 
   template header-first-add ${name}
 
-  cd photos && find ./ -type f | sort | sed 's;^\./;;' |
+  cd "${DIST_DIR}/photos" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
 
@@ -87,21 +104,19 @@ function makedist () {
     template view ${num}-${i}
     template footer ${num}-${i}
 
-    if [ ! -f "../thumbs/${photo}" ]; then 
+    if [ ! -f "${DIST_DIR}/thumbs/${photo}" ]; then 
       echo "Creating thumb for ${photo}";
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
-        "../thumbs/${photo}"
+        "${DIST_DIR}/thumbs/${photo}"
     fi
   done
 
-  cd ..
-  template footer $(cd html;ls -t page-*.html | head -n 1 | sed 's/.html//')
+  template footer $(cd "${DIST_DIR}/html";ls -t page-*.html | head -n 1 | sed 's/.html//')
 
-  ls html/*.html | grep -v page- | cut -d'-' -f1 | uniq | 
+  cd "${DIST_DIR}/html" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
-
     declare page=$(ls -t ${prefix}-*.html |
-    head -n 1 | sed 's#html/\(.*\)-.*.html#\1#')
+    head -n 1 | sed 's#\(.*\)-.*.html#\1#')
 
     declare lastview=$(ls -t ${prefix}-*.html |
     head -n 1 | sed 's/.*-\(.*\).html/\1/')
@@ -125,37 +140,24 @@ function makedist () {
   done
 }
 
-function init () {
-  [ ! -d "${INCOMING_DIR}" ] && mkdir "${INCOMING_DIR}" && echo "Created ${INCOMING_DIR}"
-  [ -d ./dist ] && rm -rf ./dist && echo Cleaned up ./dist
-  mkdir ./dist && echo Created ./dist
-}
-
-function generate () {
-  if [ ! -d "${INCOMING_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
-    exit 1
-  fi
-
-  createdirs
-  scale
-  find ./html -type f -name \*.html -delete
-  makedist 1
-  template index index .
-}
+source /etc/default/photoalbum
 
 if [ -f ~/.photoalbumrc ]; then
   source ~/.photoalbumrc
-else
-  source /etc/default/photoalbum
 fi
 
-case "${ARG}" in
+case "${ARG1}" in
   init)
     init
     ;;
+  clean)
+    clean
+    ;;
   generate)
     generate
+    ;;
+  version)
+    echo "This is Photoalbum Version ${VERSION}"
     ;;
   *)
     usage
