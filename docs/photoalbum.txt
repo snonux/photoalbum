@@ -3,7 +3,7 @@ NAME
     static web photo albums.
 
 SYNOPSIS
-    photoalbum [clean|init|version|generate]
+    photoalbum [clean|init|version|generate|all]
 
     clean
         Cleans up the working space
@@ -16,6 +16,8 @@ SYNOPSIS
 
     generate
         Generates the static photoalbum
+
+    all This just runs 'clean init generate' right after another.
 
   TUTORIAL
     * See if /etc/default/photoalbum fits your needs. If not, copy
