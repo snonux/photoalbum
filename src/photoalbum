@@ -6,7 +6,7 @@ declare -r VERSION='0.0.0'
 function usage () {
 cat - <<USAGE >&2
 Usage: 
-  $0 [clean|init|version|generate]
+  $0 [clean|init|version|generate|all]
 USAGE
 }
 
@@ -22,19 +22,19 @@ function clean () {
 }
 
 function generate () {
-  if [ ! -d "${INCOMING_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
-    exit 1
-  fi
-  if [ ! -d "${DIST_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
-    exit 1
-  fi
+ if [ ! -d "${INCOMING_DIR}" ]; then
+   echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
+   exit 1
+ fi
+ if [ ! -d "${DIST_DIR}" ]; then
+   echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
+   exit 1
+ fi
 
-  scale
-  find "${DIST_DIR}/html" -type f -name \*.html -delete
-  makedist 1
-  template index ../index
+ scale
+ find "${DIST_DIR}/html" -type f -name \*.html -delete
+ makedist 1
+ template index ../index
 }
 
 function template () {
@@ -55,7 +55,7 @@ function scale () {
       destphoto="${photo}"
     fi
 
-    destphoto="${destphoto//./}"
+    destphoto="${destphoto/./}"
 
     echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
 
@@ -81,29 +81,29 @@ function makedist () {
   cd "${DIST_DIR}/photos" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
-
+ 
     if [ ${i} -gt ${MAXPREVIEWS} ]; then
       i=1
       : $(( num++ ))
-
+ 
       next=page-${num}
       template next ${name}
       template footer ${name}
-
+ 
       prev=${name}
       name=${next}
       template header ${name} 
       template prev ${name}
     fi
-
+ 
     # Preview page
     template preview ${name}
-
+ 
     # View page
     template header ${num}-${i}
     template view ${num}-${i}
     template footer ${num}-${i}
-
+ 
     if [ ! -f "${DIST_DIR}/thumbs/${photo}" ]; then 
       echo "Creating thumb for ${photo}";
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
@@ -136,7 +136,7 @@ function makedist () {
       redirectpage=1-1
     fi
 
-    template redirect ${next}redirect
+    template redirect ${nextredirect}
   done
 }
 
@@ -147,6 +147,11 @@ if [ -f ~/.photoalbumrc ]; then
 fi
 
 case "${ARG1}" in
+  all)
+    clean
+    init
+    generate
+    ;;
   init)
     init
     ;;
