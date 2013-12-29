@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 declare -r ARG1="${1}" ; shift
-declare -r VERSION='0.0.0'
+declare -r VERSION='PHOTOALBUMVERSION'
 
 function usage () {
 cat - <<USAGE >&2
