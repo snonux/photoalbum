@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+# photoalbum (c) 2011, 2012, 2013 by Paul Buetow
+# http://photoalbum.buetow.org
+
 declare -r ARG1="${1}" ; shift
 declare -r VERSION='PHOTOALBUMVERSION'
 
