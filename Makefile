@@ -2,7 +2,7 @@ NAME=photoalbum
 all: version documentation build
 build:
 	test ! -d ./bin && mkdir ./bin || exit 0
-	sed "s/PHOTOALBUMVERSION/$$(cat .version)/" src/$(NAME) > ./bin/$(NAME)
+	sed "s/PHOTOALBUMVERSION/$$(cat .version)/" src/$(NAME).sh > ./bin/$(NAME)
 	chmod 0755 ./bin/$(NAME)
 install:
 	test ! -d $(DESTDIR)/usr/bin && mkdir -p $(DESTDIR)/usr/bin || exit 0

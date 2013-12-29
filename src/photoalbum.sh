@@ -6,48 +6,70 @@
 declare -r ARG1="${1}" ; shift
 declare -r VERSION='PHOTOALBUMVERSION'
 
-function usage () {
-cat - <<USAGE >&2
-Usage: 
+usage () {
+  cat - <<USAGE >&2
+  Usage: 
   $0 [clean|init|version|generate|all]
-USAGE
+  USAGE
 }
 
-function init () {
+init () {
   for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
     [ -d "${dir}" ] || mkdir -vp "${dir}"
   done
+
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    local -r BASE=$(basename "${INCOMING_DIR}")
+    local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
+    # New global variable
+    TARBALL_NAME="${BASE}-${NOW}.${TARBALL_SUFFIX}"
+  fi
 }
 
-function clean () {
+clean () {
   echo "Not deleting ${INCOMING_DIR}"
   [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
 }
 
-function generate () {
- if [ ! -d "${INCOMING_DIR}" ]; then
-   echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
-   exit 1
- fi
- if [ ! -d "${DIST_DIR}" ]; then
-   echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
-   exit 1
- fi
+tarball () {
+  # Cleanup tarball from prev run if any
+  find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
 
- scale
- find "${DIST_DIR}/html" -type f -name \*.html -delete
- makedist 1
- template index ../index
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    local -r BASE=$(basename "${INCOMING_DIR}")
+
+    echo "Creating tarball ${DIST_DIR}/${TARBALL_NAME} from ${INCOMING_DIR}"
+    cd $(dirname "${INCOMING_DIR}")
+    tar $TAR_OPTS  -f "${DIST_DIR}/${TARBALL_NAME}" "${BASE}"
+    cd - &>/dev/null
+  fi
 }
 
-function template () {
+generate () {
+  if [ ! -d "${INCOMING_DIR}" ]; then
+    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
+    exit 1
+  fi
+  if [ ! -d "${DIST_DIR}" ]; then
+    echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
+    exit 1
+  fi
+
+  scale
+  find "${DIST_DIR}/html" -type f -name \*.html -delete
+  makedist 1
+  template index ../index
+  tarball
+}
+
+template () {
   local -r template=${1} ; shift
   local -r html=${1}     ; shift
 
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
 }
 
-function scale () {
+scale () {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
   if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
 
@@ -65,15 +87,15 @@ function scale () {
     convert -auto-orient \
       -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
   fi
-  done
+done
 
-  echo 'Removing spaces from file names'
-  find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
-    rename 's/ /_/g' "${file}" 
-  done
+echo 'Removing spaces from file names'
+find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
+rename 's/ /_/g' "${file}" 
+done
 }
 
-function makedist () {
+makedist () {
   local num=${1} ; shift
   local name=page-${num}
   local -i i=0
@@ -84,29 +106,29 @@ function makedist () {
   cd "${DIST_DIR}/photos" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
- 
+
     if [ ${i} -gt ${MAXPREVIEWS} ]; then
       i=1
       : $(( num++ ))
- 
+
       next=page-${num}
       template next ${name}
       template footer ${name}
- 
+
       prev=${name}
       name=${next}
       template header ${name} 
       template prev ${name}
     fi
- 
+
     # Preview page
     template preview ${name}
- 
+
     # View page
     template header ${num}-${i}
     template view ${num}-${i}
     template footer ${num}-${i}
- 
+
     if [ ! -f "${DIST_DIR}/thumbs/${photo}" ]; then 
       echo "Creating thumb for ${photo}";
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
