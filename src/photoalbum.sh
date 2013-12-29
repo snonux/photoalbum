@@ -10,7 +10,7 @@ usage () {
   cat - <<USAGE >&2
   Usage: 
   $0 [clean|init|version|generate|all]
-  USAGE
+USAGE
 }
 
 init () {
