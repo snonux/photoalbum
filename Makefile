@@ -16,7 +16,6 @@ deinstall:
 	test ! -z "$(DESTDIR)" && test -d $(DESTDIR)/usr/share/$(NAME) && rm -r $(DESTDIR)/usr/share/$(NAME) || exit 0
 	test ! -z "$(DESTDIR)" && test -f $(DESTDIR)/etc/default/photoalbum && rm $(DESTDIR)/etc/default/photoalbum || exit 0
 clean:
-<<<<<<< HEAD
 	test -d ./bin && rm -Rf ./bin || exit 0
 	test -d ./debian/photoalbum && rm -Rf ./debian/photoalbum || exit 0
 version:
@@ -43,6 +42,3 @@ clean-top:
 	rm ../$(NAME)_*.changes
 	rm ../$(NAME)_*.deb
 
-=======
-	sh -c 'rm -Rf dist *.tar; exit 0'
->>>>>>> 14250af451c56b00f9e94d7b27dc24465d954a81
