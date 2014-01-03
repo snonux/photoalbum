@@ -17,13 +17,6 @@ init () {
   for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
     [ -d "${dir}" ] || mkdir -vp "${dir}"
   done
-
-  if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r BASE=$(basename "${INCOMING_DIR}")
-    local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
-    # New global variable
-    TARBALL_NAME="${BASE}-${NOW}.${TARBALL_SUFFIX}"
-  fi
 }
 
 clean () {
@@ -55,6 +48,13 @@ generate () {
     exit 1
   fi
 
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    local -r BASE=$(basename "${INCOMING_DIR}")
+    local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
+    # New global variable
+    TARBALL_NAME="${BASE}-${NOW}.${TARBALL_SUFFIX}"
+  fi
+
   scale
   find "${DIST_DIR}/html" -type f -name \*.html -delete
   makedist 1
@@ -71,8 +71,9 @@ template () {
 
 scale () {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
-  if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
+  photo=$(sed 's#^\./##' <<< "${photo}")
 
+  if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
     # Flatten directories / to __
     if [[ "${photo}" =~ / ]]; then
       destphoto="${photo//\//__}"
