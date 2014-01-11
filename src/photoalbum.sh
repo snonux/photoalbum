@@ -53,7 +53,7 @@ generate() {
     local -r BASE=$(basename "${INCOMING_DIR}")
     local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
     # New global variable
-    TARBALL_NAME="${BASE}-${NOW}.${TARBALL_SUFFIX}"
+    TARBALL_NAME="${BASE}-${NOW}${TARBALL_SUFFIX}"
   fi
 
   scale
@@ -81,8 +81,6 @@ scale() {
       else
         destphoto="${photo}"
       fi
-
-      destphoto="${destphoto/./}"
 
       echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
 
