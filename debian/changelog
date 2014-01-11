@@ -1,3 +1,11 @@
+photoalbum (0.2.3) stable; urgency=low
+
+  * Tarballs do have the extension .tar and not ..tar
+  * Images do have the file name $NAME.$TYPE and not just $NAME$TYPE
+  * Fix the version string
+
+ -- Paul Buetow <paul@buetow.org>  Sat, 11 Jan 2014 13:42:44 +0100
+
 photoalbum (0.2.2) stable; urgency=low
 
   * Some cosmetic source code fixes
