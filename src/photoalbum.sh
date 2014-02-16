@@ -3,14 +3,20 @@
 # photoalbum (c) 2011 - 2014 by Paul Buetow
 # http://photoalbum.buetow.org
 
-declare -r ARG1="${1}" ; shift
+declare -r ARG1="${1}"; shift
+declare RC="${1}"     ; shift
+
 declare -r VERSION='PHOTOALBUMVERSION'
 declare -r DEFAULTRC=/etc/default/photoalbum
+
+if [ -z "${RC}" ]; then
+  RCFILE="${DEFAULTRC}"
+fi
 
 usage() {
   cat - <<USAGE >&2
   Usage: 
-  $0 [clean|init|version|generate|all]
+  $0 clean|init|version|generate|all [rcfile]
 USAGE
 }
 
@@ -165,7 +171,7 @@ makedist() {
   done
 }
 
-source "${DEFAULTRC}"
+source "${RC}"
 
 if [ -f ~/.photoalbumrc ]; then
   source ~/.photoalbumrc
