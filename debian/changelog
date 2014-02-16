@@ -1,3 +1,11 @@
+photoalbum (0.3.0) stable; urgency=low
+
+  * Add another template set: minimal
+  * Add possibility to specify a custom config file (rcfile) path
+  * Minor bugfixing
+
+ -- Paul Buetow <paul@buetow.org>  Sun, 16 Feb 2014 12:34:45 +0100
+
 photoalbum (0.2.3) stable; urgency=low
 
   * Tarballs do have the extension .tar and not ..tar
