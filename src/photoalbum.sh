@@ -13,6 +13,11 @@ if [ -z "${RC}" ]; then
   RC="${DEFAULTRC}"
 fi
 
+if [ ! -f "${RC}" ]; then
+  echo "Error: Can not find config file ${RC}" >&2
+  exit 1
+fi
+
 usage() {
   cat - <<USAGE >&2
   Usage: 
