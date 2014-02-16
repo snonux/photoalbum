@@ -10,7 +10,7 @@ declare -r VERSION='PHOTOALBUMVERSION'
 declare -r DEFAULTRC=/etc/default/photoalbum
 
 if [ -z "${RC}" ]; then
-  RCFILE="${DEFAULTRC}"
+  RC="${DEFAULTRC}"
 fi
 
 usage() {
