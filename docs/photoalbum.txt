@@ -3,7 +3,7 @@ NAME
     static web photo albums.
 
 SYNOPSIS
-    photoalbum [clean|init|version|generate|all]
+    photoalbum clean|init|version|generate|all [rcfile]
 
     clean
         Cleans up the working space
@@ -19,6 +19,7 @@ SYNOPSIS
 
     all This just runs 'clean init generate' right after another.
 
+  RCFILE
   TUTORIAL
     * See if /etc/default/photoalbum fits your needs. If not, copy
     /etc/default/photoalbum to ~/.photoalbumrc in order to customize it.
@@ -32,6 +33,8 @@ SYNOPSIS
     * Distribute the ./dist directory
 
     * Clean the mess up with 'photoalbum clean'
+
+    It is possible to specify a custom rcfile path too.
 
    HTML TEMPLATES
     Go to the templates directory and edit them as wished.

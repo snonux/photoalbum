@@ -1,8 +1,38 @@
-photoalbum (0.1.3-develop) UNRELEASED; urgency=low
+photoalbum (0.3.0) stable; urgency=low
 
-  * Initial develop version
+  * Add another template set: minimal
+  * Add possibility to specify a custom config file (rcfile) path
+  * Minor bugfixing
 
- -- Paul Buetow <paul@buetow.org>  Sun, 29 Dec 2013 17:40:51 +0100
+ -- Paul Buetow <paul@buetow.org>  Sun, 16 Feb 2014 12:34:45 +0100
+
+photoalbum (0.2.3) stable; urgency=low
+
+  * Tarballs do have the extension .tar and not ..tar
+  * Images do have the file name $NAME.$TYPE and not just $NAME$TYPE
+  * Fix the version string
+
+ -- Paul Buetow <paul@buetow.org>  Sat, 11 Jan 2014 13:42:44 +0100
+
+photoalbum (0.2.2) stable; urgency=low
+
+  * Some cosmetic source code fixes
+
+ -- Paul Buetow <paul@buetow.org>  Sat, 11 Jan 2014 13:22:15 +0100
+
+photoalbum (0.2.1) stable; urgency=low
+
+  * Re-tagging due to some irritation
+
+ -- Paul Buetow <paul@buetow.org>  Sat, 11 Jan 2014 12:35:16 +0100
+
+photoalbum (0.2.0) stable; urgency=low
+
+  * Add support for tarball-inclusion
+
+  * Bugfix: Remove the __ prefix from the image files
+
+ -- Paul Buetow <paul@buetow.org>  Fri, 03 Jan 2014 23:14:47 +0100
 
 photoalbum (0.1.2) stable; urgency=low
 

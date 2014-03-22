@@ -1,30 +1,42 @@
-#!/bin/bash 
+#!/bin/bash
 
-# photoalbum (c) 2011, 2012, 2013 by Paul Buetow
+# photoalbum (c) 2011 - 2014 by Paul Buetow
 # http://photoalbum.buetow.org
 
-declare -r ARG1="${1}" ; shift
-declare -r VERSION='PHOTOALBUMVERSION'
+declare -r ARG1="${1}"; shift
+declare RC="${1}"     ; shift
 
-usage () {
+declare -r VERSION='PHOTOALBUMVERSION'
+declare -r DEFAULTRC=/etc/default/photoalbum
+
+if [ -z "${RC}" ]; then
+  RC="${DEFAULTRC}"
+fi
+
+if [ ! -f "${RC}" ]; then
+  echo "Error: Can not find config file ${RC}" >&2
+  exit 1
+fi
+
+usage() {
   cat - <<USAGE >&2
   Usage: 
-  $0 [clean|init|version|generate|all]
+  $0 clean|init|version|generate|all [rcfile]
 USAGE
 }
 
-init () {
+init() {
   for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
     [ -d "${dir}" ] || mkdir -vp "${dir}"
   done
 }
 
-clean () {
+clean() {
   echo "Not deleting ${INCOMING_DIR}"
   [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
 }
 
-tarball () {
+tarball() {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
 
@@ -38,7 +50,7 @@ tarball () {
   fi
 }
 
-generate () {
+generate() {
   if [ ! -d "${INCOMING_DIR}" ]; then
     echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
     exit 1
@@ -52,7 +64,7 @@ generate () {
     local -r BASE=$(basename "${INCOMING_DIR}")
     local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
     # New global variable
-    TARBALL_NAME="${BASE}-${NOW}.${TARBALL_SUFFIX}"
+    TARBALL_NAME="${BASE}-${NOW}${TARBALL_SUFFIX}"
   fi
 
   scale
@@ -62,41 +74,39 @@ generate () {
   tarball
 }
 
-template () {
+template() {
   local -r template=${1} ; shift
   local -r html=${1}     ; shift
 
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
 }
 
-scale () {
+scale() {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
-  photo=$(sed 's#^\./##' <<< "${photo}")
+    photo=$(sed 's#^\./##' <<< "${photo}")
 
-  if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
-    # Flatten directories / to __
-    if [[ "${photo}" =~ / ]]; then
-      destphoto="${photo//\//__}"
-    else
-      destphoto="${photo}"
+    if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
+      # Flatten directories / to __
+      if [[ "${photo}" =~ / ]]; then
+        destphoto="${photo//\//__}"
+      else
+        destphoto="${photo}"
+      fi
+
+      echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
+
+      convert -auto-orient \
+        -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
     fi
+  done
 
-    destphoto="${destphoto/./}"
-
-    echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
-
-    convert -auto-orient \
-      -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
-  fi
-done
-
-echo 'Removing spaces from file names'
-find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
-rename 's/ /_/g' "${file}" 
-done
+  echo 'Removing spaces from file names'
+  find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
+    rename 's/ /_/g' "${file}" 
+  done
 }
 
-makedist () {
+makedist() {
   local num=${1} ; shift
   local name=page-${num}
   local -i i=0
@@ -166,7 +176,7 @@ makedist () {
   done
 }
 
-source /etc/default/photoalbum
+source "${RC}"
 
 if [ -f ~/.photoalbumrc ]; then
   source ~/.photoalbumrc
@@ -195,4 +205,5 @@ case "${ARG1}" in
     ;;
 esac
 
+exit 0
 

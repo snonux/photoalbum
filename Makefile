@@ -8,7 +8,7 @@ install:
 	test ! -d $(DESTDIR)/usr/bin && mkdir -p $(DESTDIR)/usr/bin || exit 0
 	cp ./bin/* $(DESTDIR)/usr/bin
 	test ! -d $(DESTDIR)/usr/share/photoalbum/templates && mkdir -p $(DESTDIR)/usr/share/photoalbum/templates || exit 0
-	cp ./share/templates/* $(DESTDIR)/usr/share/photoalbum/templates
+	cp -R ./share/templates $(DESTDIR)/usr/share/photoalbum/
 	test ! -d $(DESTDIR)/etc/default && mkdir -p $(DESTDIR)/etc/default || exit 0
 	cp ./src/photoalbum.default.conf $(DESTDIR)/etc/default/photoalbum
 deinstall:
@@ -31,7 +31,7 @@ dch:
 	dch -i
 dput:
 	dput -u wheezy-buetowdotorg ../$(NAME)_$$(cat ./.version)_amd64.changes
-release: dch deb dput
+release: all dch deb dput
 	bash -c "git tag $$(cat .version)"
 	git push --tags
 	git commit -a -m 'New release'
