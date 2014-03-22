@@ -5,7 +5,7 @@ Maintainer: Paul Buetow <paul@buetow.org>
 Build-Depends: perl, make
 Standards-Version: 3.9.2
 Homepage: http://photoalbum.buetow.org
-Vcs-Git: git://git.buetow.org/photoalbum
+Vcs-Git: https://github.com/rantanplan//photoalbum
 Vcs-Browser: http://web.buetow.org/git/?p=photoalbum.git;a=summary
 
 Package: photoalbum
