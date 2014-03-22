@@ -6,7 +6,8 @@ Build-Depends: perl, make
 Standards-Version: 3.9.2
 Homepage: http://photoalbum.buetow.org
 Vcs-Git: https://github.com/rantanplan//photoalbum
-Vcs-Browser: http://web.buetow.org/git/?p=photoalbum.git;a=summary
+Vcs-Browser: https://github.com/rantanplan/photoalbum
+Vcs-Browser: https://github.com/rantanplan/photoalbum
 
 Package: photoalbum
 Architecture: all
