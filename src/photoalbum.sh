@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# photoalbum (c) 2011 - 2014 by Paul Buetow
+# photoalbum (c) 2011 - 2014 by Paul C. Buetow
 # http://photoalbum.buetow.org
 
 declare -r ARG1="${1}"; shift
@@ -18,25 +18,25 @@ if [ ! -f "${RC}" ]; then
   exit 1
 fi
 
-usage() {
+function usage() {
   cat - <<USAGE >&2
   Usage: 
   $0 clean|init|version|generate|all [rcfile]
 USAGE
 }
 
-init() {
+function init() {
   for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
     [ -d "${dir}" ] || mkdir -vp "${dir}"
   done
 }
 
-clean() {
+function clean() {
   echo "Not deleting ${INCOMING_DIR}"
   [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
 }
 
-tarball() {
+function tarball() {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
 
@@ -50,7 +50,7 @@ tarball() {
   fi
 }
 
-generate() {
+function generate() {
   if [ ! -d "${INCOMING_DIR}" ]; then
     echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
     exit 1
@@ -74,14 +74,14 @@ generate() {
   tarball
 }
 
-template() {
+function template() {
   local -r template=${1} ; shift
   local -r html=${1}     ; shift
 
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
 }
 
-scale() {
+function scale() {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
     photo=$(sed 's#^\./##' <<< "${photo}")
 
@@ -93,10 +93,18 @@ scale() {
         destphoto="${photo}"
       fi
 
-      echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
 
-      convert -auto-orient \
-        -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
+      destphoto_flatten=${destphoto// /_}
+      if [[ ! -f "${DIST_DIR}/photos/${destphoto}"
+         && ! -f "${DIST_DIR}/photos/${destphoto_flatten}" ]]; then
+
+        echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
+
+        convert -auto-orient \
+          -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
+      else
+        echo "Not scaling ${photo}, destination already exists"
+      fi
     fi
   done
 
@@ -106,7 +114,7 @@ scale() {
   done
 }
 
-makedist() {
+function makedist() {
   local num=${1} ; shift
   local name=page-${num}
   local -i i=0
