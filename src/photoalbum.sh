@@ -87,9 +87,10 @@ function generate() {
 function template() {
   local -r template=${1}  ; shift
   local -r html=${1}      ; shift
-  local -r dist_html=${1} ; shift
+  local -r dist_html="${DIST_DIR}/${HTML_DIR}"
 
   echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
+  [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
 }
 
@@ -114,18 +115,16 @@ function makescale() {
 
 function makehtml() {
   PHOTOS_DIR="${1}" ; shift
-  HTML_DIR="${1}"  ; shift
-  THUMBS_DIR="${1}"; shift
-  BACKHREF="${1}"  ; shift
-  local -r dist_html="${DIST_DIR}/${HTML_DIR}"
+  HTML_DIR="${1}"   ; shift
+  THUMBS_DIR="${1}" ; shift
+  BACKHREF="${1}"   ; shift
+
   local -i num=1
   local -i i=0
   local name=page-${num}
 
-  [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
-
-  template header ${name} "${dist_html}"
-  template header-first-add ${name} "${dist_html}"
+  template header ${name}
+  template header-first-add ${name}
 
   cd "${DIST_DIR}/${PHOTOS_DIR}" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
@@ -136,22 +135,22 @@ function makehtml() {
       : $(( num++ ))
 
       next=page-${num}
-      template next ${name} "${dist_html}"
-      template footer ${name} "${dist_html}"
+      template next ${name}
+      template footer ${name}
 
       prev=${name}
       name=${next}
-      template header ${name}  "${dist_html}"
-      template prev ${name} "${dist_html}"
+      template header ${name}
+      template prev ${name}
     fi
 
     # Preview page
-    template preview ${name} "${dist_html}"
+    template preview ${name}
 
     # View page
-    template header ${num}-${i} "${dist_html}"
-    template view ${num}-${i} "${dist_html}"
-    template footer ${num}-${i} "${dist_html}"
+    template header ${num}-${i}
+    template view ${num}-${i}
+    template footer ${num}-${i}
 
     if [ ! -f "${DIST_DIR}/${THUMBS_DIR}/${photo}" ]; then 
       echo "Creating thumb ${DIST_DIR}/${THUMBS_DIR}/${photo}";
@@ -164,10 +163,10 @@ function makehtml() {
     fi
   done
 
-  template footer $(cd "${dist_html}";ls -t page-*.html |
-  head -n 1 | sed 's/.html//') "${dist_html}"
+  template footer $(cd "${DIST_DIR}/${HTML_DIR}";ls -t page-*.html |
+  head -n 1 | sed 's/.html//') "${DIST_DIR}/${HTML_DIR}"
 
-  cd "${dist_html}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
+  cd "${DIST_DIR}/${HTML_DIR}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
     declare page=$(ls -t ${prefix}-*.html |
     head -n 1 | sed 's#\(.*\)-.*.html#\1#')
@@ -179,21 +178,21 @@ function makehtml() {
     declare nextredirect=${page}-$((lastview+1))
 
     redirectpage=$(( page-1 ))-${MAXPREVIEWS}
-    template redirect ${prevredirect} "${dist_html}"
+    template redirect ${prevredirect}
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
       redirectpage=$(( page+1 ))-1
     else
       redirectpage=${page}-${lastview}
-      template redirect 0-${MAXPREVIEWS} "${dist_html}"
+      template redirect 0-${MAXPREVIEWS}
 
       redirectpage=1-1
     fi
 
-    template redirect ${nextredirect} "${dist_html}"
+    template redirect ${nextredirect}
   done
 
-  template index ../index "${dist_html}"
+  template index ../index
 }
 
 function makemake() {
