@@ -32,7 +32,6 @@ function init() {
 }
 
 function clean() {
-  echo "Not deleting ${INCOMING_DIR} but ${DIST_DIR}"
   [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
 }
 
@@ -72,16 +71,20 @@ function generate() {
   find "${DIST_DIR}" -type f -name \*.html -delete
 
   # Figure out wether we want sub-albums or not
+  # TODO: Refactor, store dirs in a Bash Array
   dirs=$(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | head | wc -l)
   if [[ "${SUB_ALBUMS}" != yes || ${dirs} -eq 0 ]]; then
-    makehtml photos html thumbs ..
+    makealbumhtml photos html thumbs ..
 
   else
+    IS_SUBALBUM=yes
     find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
     while read dir; do
       basename=$(basename "${dir}")
-      makehtml "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
+      makealbumhtml "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
+    # Create an album selection screen
+    makealbumoverviewhtml
   fi
 
   # Create top level index/redirect page
@@ -97,7 +100,7 @@ function template() {
   local -r html=${1}      ; shift
   local -r dist_html="${DIST_DIR}/${HTML_DIR}"
 
-  echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
+  #echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
   [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
 }
@@ -115,13 +118,11 @@ function makescale() {
       echo "Scaling ${photo} to ${destphoto_nospace}"
       convert -auto-orient \
         -geometry ${GEOMETRY} "${photo}" "${destphoto_nospace}"
-    else
-      echo "Not scaling ${photo} to ${destphoto_nospace}, already exists"
     fi
   done
 }
 
-function makehtml() {
+function makealbumhtml() {
   # First initialize some globals (used as template vars)
   PHOTOS_DIR="${1}" ; shift
   HTML_DIR="${1}"   ; shift
@@ -167,8 +168,6 @@ function makehtml() {
       [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
         "${DIST_DIR}/${THUMBS_DIR}/${photo}"
-    else
-      echo "Not creating thumb ${DIST_DIR}/${THUMBS_DIR}/${photo}, already exists";
     fi
   done
 
@@ -201,8 +200,32 @@ function makehtml() {
     template redirect ${nextredirect}
   done
 
+  # Create per album index/redirect page
   REDIRECT_PAGE=page-1
   template redirect index
+}
+
+function makealbumoverviewhtml() {
+  HTML_DIR=html
+  BACKHREF=..
+  IS_SUBALBUM=no
+
+  template header index
+  template header-first-add index
+
+  find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | sort |
+  while read dir; do
+    basename=$(basename "$dir")
+    ALBUM=$basename
+    thumbs_dir="${DIST_DIR}/thumbs/${basename}"
+    count=$(ls "${thumbs_dir}" | wc -l)
+    random=$(( 1 + $RANDOM % $count ))
+    RANDOM_THUMB="./thumbs/${basename}"/$(find "$thumbs_dir" -type f -printf "%f\n" |
+    head -n $random | tail -n 1)
+    template index-preview index 
+  done
+
+  template footer index
 }
 
 function makemake() {
