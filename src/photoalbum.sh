@@ -67,9 +67,9 @@ function generate() {
     TARBALL_NAME="${BASE}-${NOW}${TARBALL_SUFFIX}"
   fi
 
-  scale
+  makescale
   find "${DIST_DIR}/html" -type f -name \*.html -delete
-  makedist 1
+  makehtml 1
   template index ../index
   tarball
 }
@@ -81,7 +81,7 @@ function template() {
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
 }
 
-function scale() {
+function makescale() {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
     photo=$(sed 's#^\./##' <<< "${photo}")
     destphoto="${DIST_DIR}/photos/${photo}"
@@ -100,7 +100,7 @@ function scale() {
   done
 }
 
-function makedist() {
+function makehtml() {
   local num=${1} ; shift
   local name=page-${num}
   local -i i=0
@@ -180,6 +180,7 @@ all:
 clean:
 	photoalbum clean photoalbumrc
 MAKEFILE
+  echo You may now customize ./photoalbumrc and run make
 }
 
 source "${RC}"
