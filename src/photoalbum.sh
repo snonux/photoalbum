@@ -69,16 +69,28 @@ function generate() {
 
   makescale
   find "${DIST_DIR}/html" -type f -name \*.html -delete
-  makehtml "${DIST_DIR}/photos" "${DIST_DIR}/html"
-  template index ../index
+
+  # Figure out wether we want sub-albums or not
+  dirs=$(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | head | wc -l)
+  if [ ${dirs} -eq 0 ]; then
+    makehtml photos html thumbs ..
+  else
+    find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
+    while read dir; do
+      basename=$(basename "${dir}")
+      makehtml "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
+    done
+  fi
   tarball
 }
 
 function template() {
-  local -r template=${1} ; shift
-  local -r html=${1}     ; shift
+  local -r template=${1}  ; shift
+  local -r html=${1}      ; shift
+  local -r dist_html=${1} ; shift
 
-  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
+  echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
+  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
 }
 
 function makescale() {
@@ -101,16 +113,21 @@ function makescale() {
 }
 
 function makehtml() {
-  local dist_photo="${1}" ; shift
-  local dist_html="${1}"  ; shift
+  PHOTOS_DIR="${1}" ; shift
+  HTML_DIR="${1}"  ; shift
+  THUMBS_DIR="${1}"; shift
+  BACKHREF="${1}"  ; shift
+  local -r dist_html="${DIST_DIR}/${HTML_DIR}"
   local -i num=1
   local -i i=0
   local name=page-${num}
 
-  template header ${name} 
-  template header-first-add ${name}
+  [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
 
-  cd "${dist_photo}" && find ./ -type f | sort | sed 's;^\./;;' |
+  template header ${name} "${dist_html}"
+  template header-first-add ${name} "${dist_html}"
+
+  cd "${DIST_DIR}/${PHOTOS_DIR}" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
 
@@ -119,35 +136,36 @@ function makehtml() {
       : $(( num++ ))
 
       next=page-${num}
-      template next ${name}
-      template footer ${name}
+      template next ${name} "${dist_html}"
+      template footer ${name} "${dist_html}"
 
       prev=${name}
       name=${next}
-      template header ${name} 
-      template prev ${name}
+      template header ${name}  "${dist_html}"
+      template prev ${name} "${dist_html}"
     fi
 
     # Preview page
-    template preview ${name}
+    template preview ${name} "${dist_html}"
 
     # View page
-    template header ${num}-${i}
-    template view ${num}-${i}
-    template footer ${num}-${i}
+    template header ${num}-${i} "${dist_html}"
+    template view ${num}-${i} "${dist_html}"
+    template footer ${num}-${i} "${dist_html}"
 
-    if [ ! -f "${DIST_DIR}/thumbs/${photo}" ]; then 
-      echo "Creating thumb for ${photo}";
-      dirname=$(dirname "${DIST_DIR}/thumbs/${photo}")
+    if [ ! -f "${DIST_DIR}/${THUMBS_DIR}/${photo}" ]; then 
+      echo "Creating thumb ${DIST_DIR}/${THUMBS_DIR}/${photo}";
+      dirname=$(dirname "${DIST_DIR}/${THUMBS_DIR}/${photo}")
       [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
-        "${DIST_DIR}/thumbs/${photo}"
+        "${DIST_DIR}/${THUMBS_DIR}/${photo}"
     else
-      echo "Not creating thumb for ${photo}, already exists";
+      echo "Not creating thumb ${DIST_DIR}/${THUMBS_DIR}/${photo}, already exists";
     fi
   done
 
-  template footer $(cd "${DIST_DIR}/html";ls -t page-*.html | head -n 1 | sed 's/.html//')
+  template footer $(cd "${dist_html}";ls -t page-*.html |
+  head -n 1 | sed 's/.html//') "${dist_html}"
 
   cd "${dist_html}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
@@ -161,19 +179,21 @@ function makehtml() {
     declare nextredirect=${page}-$((lastview+1))
 
     redirectpage=$(( page-1 ))-${MAXPREVIEWS}
-    template redirect ${prevredirect}
+    template redirect ${prevredirect} "${dist_html}"
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
       redirectpage=$(( page+1 ))-1
     else
       redirectpage=${page}-${lastview}
-      template redirect 0-${MAXPREVIEWS}
+      template redirect 0-${MAXPREVIEWS} "${dist_html}"
 
       redirectpage=1-1
     fi
 
-    template redirect ${nextredirect}
+    template redirect ${nextredirect} "${dist_html}"
   done
+
+  template index ../index "${dist_html}"
 }
 
 function makemake() {
@@ -187,10 +207,12 @@ MAKEFILE
   echo You may now customize ./photoalbumrc and run make
 }
 
-source "${RC}"
-
-if [ -f ~/.photoalbumrc ]; then
-  source ~/.photoalbumrc
+if [ -f "${RC}" ]; then
+  source "${RC}"
+else
+  if [ -f ~/.photoalbumrc ]; then
+    source ~/.photoalbumrc
+  fi
 fi
 
 case "${ARG1}" in
