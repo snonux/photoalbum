@@ -72,7 +72,7 @@ function generate() {
 
   # Figure out wether we want sub-albums or not
   dirs=$(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | head | wc -l)
-  if [ ${dirs} -eq 0 ]; then
+  if [[ "${SUB_ALBUMS}" != yes || ${dirs} -eq 0 ]]; then
     makehtml photos html thumbs ..
   else
     find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
