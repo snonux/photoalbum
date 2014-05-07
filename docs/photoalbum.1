@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PHOTOALBUM 1"
-.TH PHOTOALBUM 1 "2014-02-16" "photoalbum 0.3.0" "User Commands"
+.TH PHOTOALBUM 1 "2014-05-07" "photoalbum 0.3.0" "User Commands"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -134,6 +134,7 @@ photoalbum \- photoalbum is a minimal bash script for linux to generate static w
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 photoalbum clean|init|version|generate|all [rcfile]
+photoalbum makemake
 .IP "clean" 4
 .IX Item "clean"
 Cleans up the working space
@@ -149,6 +150,9 @@ Generates the static photoalbum
 .IP "all" 4
 .IX Item "all"
 This just runs 'clean init generate' right after another.
+.IP "makemake" 4
+.IX Item "makemake"
+Creates a Makefile and photoalbumrc in the current working directory.
 .SS "\s-1RCFILE\s0"
 .IX Subsection "RCFILE"
 .SS "\s-1TUTORIAL\s0"

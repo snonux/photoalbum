@@ -32,7 +32,7 @@ function init() {
 }
 
 function clean() {
-  echo "Not deleting ${INCOMING_DIR}"
+  echo "Not deleting ${INCOMING_DIR} but ${DIST_DIR}"
   [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
 }
 
@@ -184,6 +184,16 @@ function makedist() {
   done
 }
 
+function makemake() {
+  [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
+  cat <<MAKEFILE > ./Makefile
+all:
+	photoalbum all photoalbumrc
+clean:
+	photoalbum clean photoalbumrc
+MAKEFILE
+}
+
 source "${RC}"
 
 if [ -f ~/.photoalbumrc ]; then
@@ -192,7 +202,6 @@ fi
 
 case "${ARG1}" in
   all)
-    clean
     init
     generate
     ;;
@@ -207,6 +216,9 @@ case "${ARG1}" in
     ;;
   version)
     echo "This is Photoalbum Version ${VERSION}"
+    ;;
+  makemake)
+    makemake
     ;;
   *)
     usage
