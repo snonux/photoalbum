@@ -218,10 +218,13 @@ function makealbumoverviewhtml() {
     basename=$(basename "$dir")
     ALBUM=$basename
     thumbs_dir="${DIST_DIR}/thumbs/${basename}"
-    count=$(ls "${thumbs_dir}" | wc -l)
-    random=$(( 1 + $RANDOM % $count ))
+    pictures=$(ls "${thumbs_dir}" | wc -l)
+    random=$(( 1 + $RANDOM % $pictures ))
     RANDOM_THUMB="./thumbs/${basename}"/$(find "$thumbs_dir" -type f -printf "%f\n" |
     head -n $random | tail -n 1)
+    pages=$(( $pictures / $MAXPREVIEWS + 1))
+    test $pages -gt 1 && s=s || s=''
+    DESCRIPTION="${pictures} pictures / ${pages} page$s"
     template index-preview index 
   done
 

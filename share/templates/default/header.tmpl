@@ -1,10 +1,10 @@
-if [ "$IS_SUBALBUM" = yes ]; then
-  TOP="<br /><br /><a href='${BACKHREF}/index.html'>Go to Album overview</a>"
+if [ "${IS_SUBALBUM}" = yes ]; then
+  GOTO_OVERVIEW="<br /><br /><a href='${BACKHREF}/index.html'>Go to Album overview</a>"
 fi
 cat <<END
 <html>
 <head>
-<title>$TITLE</title>
+<title>${TITLE}</title>
 <style type="text/css">
   body {
     background-color: #000000;
@@ -22,6 +22,6 @@ cat <<END
 </style>
 </head>
 <body>
-$TITLE $TOP
+${TITLE} ${GOTO_OVERVIEW}
 <hr />
 END
