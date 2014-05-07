@@ -93,10 +93,10 @@ function scale() {
         destphoto="${photo}"
       fi
 
+      destphoto_nospace=${destphoto// /_}
 
-      destphoto_flatten=${destphoto// /_}
       if [[ ! -f "${DIST_DIR}/photos/${destphoto}"
-         && ! -f "${DIST_DIR}/photos/${destphoto_flatten}" ]]; then
+         && ! -f "${DIST_DIR}/photos/${destphoto_nospace}" ]]; then
 
         echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
 
