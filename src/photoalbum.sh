@@ -55,6 +55,7 @@ function generate() {
     echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
     exit 1
   fi
+
   if [ ! -d "${DIST_DIR}" ]; then
     echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
     exit 1
@@ -68,12 +69,13 @@ function generate() {
   fi
 
   makescale
-  find "${DIST_DIR}/html" -type f -name \*.html -delete
+  find "${DIST_DIR}" -type f -name \*.html -delete
 
   # Figure out wether we want sub-albums or not
   dirs=$(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | head | wc -l)
   if [[ "${SUB_ALBUMS}" != yes || ${dirs} -eq 0 ]]; then
     makehtml photos html thumbs ..
+
   else
     find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
     while read dir; do
@@ -81,6 +83,12 @@ function generate() {
       makehtml "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
   fi
+
+  # Create top level index/redirect page
+  HTML_DIR=./
+  REDIRECT_PAGE=./html/index
+  template redirect index
+
   tarball
 }
 
@@ -114,6 +122,7 @@ function makescale() {
 }
 
 function makehtml() {
+  # First initialize some globals (used as template vars)
   PHOTOS_DIR="${1}" ; shift
   HTML_DIR="${1}"   ; shift
   THUMBS_DIR="${1}" ; shift
@@ -177,22 +186,23 @@ function makehtml() {
     declare prevredirect=${page}-0
     declare nextredirect=${page}-$((lastview+1))
 
-    redirectpage=$(( page-1 ))-${MAXPREVIEWS}
+    REDIRECT_PAGE=$(( page-1 ))-${MAXPREVIEWS}
     template redirect ${prevredirect}
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
-      redirectpage=$(( page+1 ))-1
+      REDIRECT_PAGE=$(( page+1 ))-1
     else
-      redirectpage=${page}-${lastview}
+      REDIRECT_PAGE=${page}-${lastview}
       template redirect 0-${MAXPREVIEWS}
 
-      redirectpage=1-1
+      REDIRECT_PAGE=1-1
     fi
 
     template redirect ${nextredirect}
   done
 
-  template index ../index
+  REDIRECT_PAGE=page-1
+  template redirect index
 }
 
 function makemake() {
