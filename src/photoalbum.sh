@@ -69,7 +69,7 @@ function generate() {
 
   makescale
   find "${DIST_DIR}/html" -type f -name \*.html -delete
-  makehtml 1
+  makehtml "${DIST_DIR}/photos" "${DIST_DIR}/html"
   template index ../index
   tarball
 }
@@ -101,14 +101,16 @@ function makescale() {
 }
 
 function makehtml() {
-  local num=${1} ; shift
-  local name=page-${num}
+  local dist_photo="${1}" ; shift
+  local dist_html="${1}"  ; shift
+  local -i num=1
   local -i i=0
+  local name=page-${num}
 
   template header ${name} 
   template header-first-add ${name}
 
-  cd "${DIST_DIR}/photos" && find ./ -type f | sort | sed 's;^\./;;' |
+  cd "${dist_photo}" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
 
@@ -140,12 +142,14 @@ function makehtml() {
       [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
         "${DIST_DIR}/thumbs/${photo}"
+    else
+      echo "Not creating thumb for ${photo}, already exists";
     fi
   done
 
   template footer $(cd "${DIST_DIR}/html";ls -t page-*.html | head -n 1 | sed 's/.html//')
 
-  cd "${DIST_DIR}/html" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
+  cd "${dist_html}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
     declare page=$(ls -t ${prefix}-*.html |
     head -n 1 | sed 's#\(.*\)-.*.html#\1#')
