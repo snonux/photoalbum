@@ -3,11 +3,11 @@
 # photoalbum (c) 2011 - 2014 by Paul C. Buetow
 # http://photoalbum.buetow.org
 
-declare -r ARG1="${1}"; shift
-declare RC="${1}"     ; shift
-
 declare -r VERSION='PHOTOALBUMVERSION'
 declare -r DEFAULTRC=/etc/default/photoalbum
+
+declare -r ARG1="${1}" ; shift
+declare    RC="${1}"   ; shift
 
 if [ -z "${RC}" ]; then
   RC="${DEFAULTRC}"
@@ -84,33 +84,19 @@ function template() {
 function scale() {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
     photo=$(sed 's#^\./##' <<< "${photo}")
+    destphoto="${DIST_DIR}/photos/${photo}"
+    destphoto_nospace=${destphoto// /_}
 
-    if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
-      # Flatten directories / to __
-      if [[ "${photo}" =~ / ]]; then
-        destphoto="${photo//\//__}"
-      else
-        destphoto="${photo}"
-      fi
+    dirname=$(dirname "${destphoto}")
+    [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
 
-      destphoto_nospace=${destphoto// /_}
-
-      if [[ ! -f "${DIST_DIR}/photos/${destphoto}"
-         && ! -f "${DIST_DIR}/photos/${destphoto_nospace}" ]]; then
-
-        echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
-
-        convert -auto-orient \
-          -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
-      else
-        echo "Not scaling ${photo}, destination already exists"
-      fi
+    if [ ! -f "${destphoto_nospace}" ]; then
+      echo "Scaling ${photo} to ${destphoto_nospace}"
+      convert -auto-orient \
+        -geometry ${GEOMETRY} "${photo}" "${destphoto_nospace}"
+    else
+      echo "Not scaling ${photo} to ${destphoto_nospace}, already exists"
     fi
-  done
-
-  echo 'Removing spaces from file names'
-  find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
-    rename 's/ /_/g' "${file}" 
   done
 }
 
@@ -150,6 +136,8 @@ function makedist() {
 
     if [ ! -f "${DIST_DIR}/thumbs/${photo}" ]; then 
       echo "Creating thumb for ${photo}";
+      dirname=$(dirname "${DIST_DIR}/thumbs/${photo}")
+      [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
         "${DIST_DIR}/thumbs/${photo}"
     fi
