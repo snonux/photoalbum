@@ -3,7 +3,7 @@ NAME
     static web photo albums.
 
 SYNOPSIS
-    photoalbum clean|version|generate|all [rcfile] photoalbum makemake
+    photoalbum clean|version|generate [rcfile] photoalbum makemake
 
     clean
         Cleans up the working space
@@ -13,8 +13,6 @@ SYNOPSIS
 
     generate
         Generates the static photoalbum
-
-    all This just runs 'clean generate' right after another.
 
     makemake
         Creates a Makefile and photoalbumrc in the current working

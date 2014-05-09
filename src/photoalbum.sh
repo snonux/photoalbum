@@ -5,8 +5,8 @@
 
 declare -r VERSION='0.3.1develop'
 declare -r DEFAULTRC=/etc/default/photoalbum
-declare -r ARG1="${1}" ; shift
-declare    RC_FILE="${1}"   ; shift
+declare -r ARG1="${1}"    ; shift
+declare    RC_FILE="${1}" ; shift
 
 function usage() {
   cat - <<USAGE >&2
@@ -70,8 +70,10 @@ function albumhtml() {
   declare html_dir="${1}"   ; shift
   declare thumbs_dir="${1}" ; shift
   declare backhref="${1}"   ; shift
+
   declare -i num=1
   declare -i i=0
+
   declare name=page-${num}
   declare next=''
 
@@ -105,9 +107,10 @@ function albumhtml() {
     template footer ${num}-${i}
 
     if [ ! -f "${DIST_DIR}/${thumbs_dir}/${photo}" ]; then 
-      echo "Creating thumb ${DIST_DIR}/${thumbs_dir}/${photo}";
       dirname=$(dirname "${DIST_DIR}/${thumbs_dir}/${photo}")
       [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
+
+      echo "Creating thumb ${DIST_DIR}/${thumbs_dir}/${photo}";
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
         "${DIST_DIR}/${thumbs_dir}/${photo}"
     fi
@@ -149,8 +152,8 @@ function albumhtml() {
 function albumindexhtml() {
   declare -a dirs=( "${1}" )
   declare is_subalbum=no
-  html_dir=html
-  backhref=..
+  declare html_dir=html
+  declare backhref=..
 
   template header index
   template header-first-add index
@@ -161,10 +164,12 @@ function albumindexhtml() {
     declare thumbs_dir="${DIST_DIR}/thumbs/${basename}"
     declare pictures=$(ls "${thumbs_dir}" | wc -l)
     declare random_num=$(( 1 + $RANDOM % $pictures ))
+    declare pages=$(( $pictures / $MAXPREVIEWS + 1 ))
+
     declare random_thumb="./thumbs/${basename}"/$(find \
       "$thumbs_dir" -type f -printf "%f\n" |
       head -n $random_num | tail -n 1)
-    declare pages=$(( $pictures / $MAXPREVIEWS + 1))
+
     [ $pages -gt 1 ] && s=s || s=''
     declare description="${pictures} pictures / ${pages} page$s"
     template index-preview index 
@@ -203,6 +208,7 @@ function generate() {
       albumhtml \
         "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
+
     # Create an album selection screen
     albumindexhtml "${dirs[*]}"
   fi
@@ -233,7 +239,6 @@ fi
 source "${RC_FILE}"
 
 case "${ARG1}" in
-  all)      clean; generate;;
   clean)    [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}";;
   generate) generate;;
   version)  echo "This is Photoalbum Version ${VERSION}";;
