@@ -115,8 +115,8 @@ function albumhtml() {
     fi
   done
 
-  template footer $(cd "${DIST_DIR}/${html_dir}";ls -t page-*.html |
-  head -n 1) "${DIST_DIR}/${html_dir}"
+  template footer \
+    $(cd "${DIST_DIR}/${html_dir}";ls -t page-*.html | head -n 1)
 
   cd "${DIST_DIR}/${html_dir}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
