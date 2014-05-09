@@ -1,3 +1,9 @@
+photoalbum (0.3.1develop) stable; urgency=low
+
+  * Dev version
+
+ -- Paul Buetow <paul@buetow.org>  Wed, 07 May 2014 14:58:51 +0200
+
 photoalbum (0.3.0) stable; urgency=low
 
   * Add another template set: minimal

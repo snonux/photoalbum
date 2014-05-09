@@ -3,7 +3,7 @@
 # photoalbum (c) 2011 - 2014 by Paul C. Buetow
 # http://photoalbum.buetow.org
 
-declare -r VERSION='PHOTOALBUMVERSION'
+declare -r VERSION='0.3.1develop'
 declare -r DEFAULTRC=/etc/default/photoalbum
 
 declare -r ARG1="${1}" ; shift
@@ -69,22 +69,20 @@ function generate() {
 
   makescale
   find "${DIST_DIR}" -type f -name \*.html -delete
+  dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | sort) )
 
   # Figure out wether we want sub-albums or not
-  # TODO: Refactor, store dirs in a Bash Array
-  dirs=$(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | head | wc -l)
-  if [[ "${SUB_ALBUMS}" != yes || ${dirs} -eq 0 ]]; then
+  if [[ "${SUB_ALBUMS}" != yes || ${#dirs[*]} -eq 0 ]]; then
     makealbumhtml photos html thumbs ..
 
   else
     IS_SUBALBUM=yes
-    find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
-    while read dir; do
+    for dir in ${dirs[*]}; do
       basename=$(basename "${dir}")
       makealbumhtml "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
     # Create an album selection screen
-    makealbumoverviewhtml
+    makealbumoverviewhtml <<< ${dirs[*]}
   fi
 
   # Create top level index/redirect page
@@ -213,7 +211,6 @@ function makealbumoverviewhtml() {
   template header index
   template header-first-add index
 
-  find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | sort |
   while read dir; do
     basename=$(basename "$dir")
     ALBUM=$basename
