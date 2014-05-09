@@ -33,6 +33,16 @@ function tarball() {
   fi
 }
 
+function template() {
+  local -r template=${1}  ; shift
+  local -r html=${1}      ; shift
+  local -r dist_html="${DIST_DIR}/${html_dir}"
+
+  #echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
+  [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
+  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
+}
+
 function generate() {
   if [ ! -d "${INCOMING_DIR}" ]; then
     echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
@@ -42,22 +52,24 @@ function generate() {
   if [ "${TARBALL_INCLUDE}" = yes ]; then
     local -r base=$(basename "${INCOMING_DIR}")
     local -r now=$(date +'%Y-%m-%d-%H%M%S')
-    tarball_name="${base}-${now}${TARBALL_SUFFIX}"
+    declare -r tarball_name="${base}-${now}${TARBALL_SUFFIX}"
   fi
 
   makescale
+
   find "${DIST_DIR}" -type f -name \*.html -delete
   local -a dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
     sort) )
 
   # Figure out wether we want sub-albums or not
-  if [[ "${SUB_albumS}" != yes || ${#dirs[*]} -eq 0 ]]; then
+  if [[ "${SUB_ALBUMS}" != yes || ${#dirs[*]} -eq 0 ]]; then
+    declare is_subalbum=no
     makealbumhtml photos html thumbs ..
 
   else
-    is_subalbum=yes
+    declare is_subalbum=yes
     for dir in ${dirs[*]}; do
-      basename=$(basename "${dir}")
+      local basename=$(basename "${dir}")
       makealbumhtml \
         "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
@@ -73,23 +85,13 @@ function generate() {
   tarball
 }
 
-function template() {
-  local -r template=${1}  ; shift
-  local -r html=${1}      ; shift
-  local -r dist_html="${DIST_DIR}/${html_dir}"
-
-  #echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
-  [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
-  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
-}
-
 function makescale() {
   cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
-    photo=$(sed 's#^\./##' <<< "${photo}")
-    destphoto="${DIST_DIR}/photos/${photo}"
-    destphoto_nospace=${destphoto// /_}
+    declare photo=$(sed 's#^\./##' <<< "${photo}")
+    declare destphoto="${DIST_DIR}/photos/${photo}"
+    declare destphoto_nospace=${destphoto// /_}
 
-    dirname=$(dirname "${destphoto}")
+    declare dirname=$(dirname "${destphoto}")
     [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
 
     if [ ! -f "${destphoto_nospace}" ]; then
@@ -106,6 +108,7 @@ function makealbumhtml() {
   html_dir="${1}"   ; shift
   thumbs_dir="${1}" ; shift
   backhref="${1}"   ; shift
+  declare is_subalbum=no
 
   local -i num=1
   local -i i=0
@@ -188,23 +191,22 @@ function makealbumindexhtml() {
   local -a dirs=( "${1}" )
   html_dir=html
   backhref=..
-  is_subalbum=no
 
   template header index
   template header-first-add index
 
   for dir in ${dirs[*]}; do
-    basename=$(basename "$dir")
-    album=$basename
-    thumbs_dir="${DIST_DIR}/thumbs/${basename}"
-    pictures=$(ls "${thumbs_dir}" | wc -l)
-    random_num=$(( 1 + $RANDOM % $pictures ))
-    random_thumb="./thumbs/${basename}"/$(find \
+    declare basename=$(basename "$dir")
+    declare album=$basename
+    declare thumbs_dir="${DIST_DIR}/thumbs/${basename}"
+    declare pictures=$(ls "${thumbs_dir}" | wc -l)
+    declare random_num=$(( 1 + $RANDOM % $pictures ))
+    declare random_thumb="./thumbs/${basename}"/$(find \
       "$thumbs_dir" -type f -printf "%f\n" |
       head -n $random_num | tail -n 1)
-    pages=$(( $pictures / $MAXPREVIEWS + 1))
+    declare pages=$(( $pictures / $MAXPREVIEWS + 1))
     [ $pages -gt 1 ] && s=s || s=''
-    description="${pictures} pictures / ${pages} page$s"
+    declare description="${pictures} pictures / ${pages} page$s"
     template index-preview index 
   done
 
