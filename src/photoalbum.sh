@@ -15,22 +15,26 @@ function usage() {
 USAGE
 }
 
-function clean() {
-  [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
+function makemake() {
+  [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
+  cat <<MAKEFILE > ./Makefile
+all:
+	photoalbum generate photoalbumrc
+clean:
+	photoalbum clean photoalbumrc
+MAKEFILE
+  echo You may now customize ./photoalbumrc and run make
 }
 
 function tarball() {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
+  declare -r base=$(basename "${INCOMING_DIR}")
 
-  if [ "${TARBALL_INCLUDE}" = yes ]; then
-    declare -r base=$(basename "${INCOMING_DIR}")
-
-    echo "Creating tarball ${DIST_DIR}/${tarball_name} from ${INCOMING_DIR}"
-    cd $(dirname "${INCOMING_DIR}")
-    tar $TAR_OPTS  -f "${DIST_DIR}/${tarball_name}" "${base}"
-    cd - &>/dev/null
-  fi
+  echo "Creating tarball ${DIST_DIR}/${tarball_name} from ${INCOMING_DIR}"
+  cd $(dirname "${INCOMING_DIR}")
+  tar $TAR_OPTS  -f "${DIST_DIR}/${tarball_name}" "${base}"
+  cd - &>/dev/null
 }
 
 function template() {
@@ -38,55 +42,14 @@ function template() {
   declare -r html=${1}      ; shift
   declare -r dist_html="${DIST_DIR}/${html_dir}"
 
-  #echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
+  # Creating ${dist_html}/${html}.html from ${template}.tmpl
   [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
 }
 
-function generate() {
-  if [ ! -d "${INCOMING_DIR}" ]; then
-    echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
-    exit 1
-  fi
-
-  if [ "${TARBALL_INCLUDE}" = yes ]; then
-    declare -r base=$(basename "${INCOMING_DIR}")
-    declare -r now=$(date +'%Y-%m-%d-%H%M%S')
-    declare -r tarball_name="${base}-${now}${TARBALL_SUFFIX}"
-  fi
-
-  makescale
-
-  find "${DIST_DIR}" -type f -name \*.html -delete
-  declare -a dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
-    sort) )
-
-  # Figure out wether we want sub-albums or not
-  if [[ "${SUB_ALBUMS}" != yes || ${#dirs[*]} -eq 0 ]]; then
-    declare is_subalbum=no
-    makealbumhtml photos html thumbs ..
-
-  else
-    declare is_subalbum=yes
-    for dir in ${dirs[*]}; do
-      declare basename=$(basename "${dir}")
-      makealbumhtml \
-        "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
-    done
-    # Create an album selection screen
-    makealbumindexhtml "${dirs[*]}"
-  fi
-
-  # Create top level index/redirect page
-  declare html_dir=./
-  declare redirect_page=./html/index
-  template redirect index
-
-  tarball
-}
-
-function makescale() {
-  cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
+function scalephotos() {
+  cd "${INCOMING_DIR}" && find ./ -type f | sort |
+  while read photo; do
     declare photo=$(sed 's#^\./##' <<< "${photo}")
     declare destphoto="${DIST_DIR}/photos/${photo}"
     declare destphoto_nospace=${destphoto// /_}
@@ -102,7 +65,7 @@ function makescale() {
   done
 }
 
-function makealbumhtml() {
+function albumhtml() {
   declare photos_dir="${1}" ; shift
   declare html_dir="${1}"   ; shift
   declare thumbs_dir="${1}" ; shift
@@ -170,13 +133,12 @@ function makealbumhtml() {
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
       declare redirect_page=$(( page+1 ))-1
+
     else
       declare redirect_page=${page}-${lastview}
       template redirect 0-${MAXPREVIEWS}
-
       redirect_page=1-1
     fi
-
     template redirect ${nextredirect}
   done
 
@@ -185,7 +147,7 @@ function makealbumhtml() {
   template redirect index
 }
 
-function makealbumindexhtml() {
+function albumindexhtml() {
   declare -a dirs=( "${1}" )
   html_dir=html
   backhref=..
@@ -211,15 +173,46 @@ function makealbumindexhtml() {
   template footer index
 }
 
-function makemake() {
-  [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
-  cat <<MAKEFILE > ./Makefile
-all:
-	photoalbum generate photoalbumrc
-clean:
-	photoalbum clean photoalbumrc
-MAKEFILE
-  echo You may now customize ./photoalbumrc and run make
+function generate() {
+  if [ ! -d "${INCOMING_DIR}" ]; then
+    echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
+    exit 1
+  fi
+
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    declare -r base=$(basename "${INCOMING_DIR}")
+    declare -r now=$(date +'%Y-%m-%d-%H%M%S')
+    declare -r tarball_name="${base}-${now}${TARBALL_SUFFIX}"
+  fi
+
+  scalephotos
+
+  find "${DIST_DIR}" -type f -name \*.html -delete
+  declare -a dirs=( $(find "${DIST_DIR}/photos" \
+    -mindepth 1 -maxdepth 1 -type d | sort) )
+
+  # Figure out wether we want sub-albums or not
+  if [[ "${SUB_ALBUMS}" != yes || ${#dirs[*]} -eq 0 ]]; then
+    declare is_subalbum=no
+    albumhtml photos html thumbs ..
+
+  else
+    declare is_subalbum=yes
+    for dir in ${dirs[*]}; do
+      declare basename=$(basename "${dir}")
+      albumhtml \
+        "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
+    done
+    # Create an album selection screen
+    albumindexhtml "${dirs[*]}"
+  fi
+
+  # Create top level index/redirect page
+  declare html_dir=./
+  declare redirect_page=./html/index
+  template redirect index
+
+  [ "${TARBALL_INCLUDE}" = yes ] && tarball
 }
 
 if [ -z "${RC_FILE}" ]; then
@@ -239,7 +232,7 @@ source "${RC_FILE}"
 
 case "${ARG1}" in
   all)      clean; generate;;
-  clean)    clean;;
+  clean)    [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}";;
   generate) generate;;
   version)  echo "This is Photoalbum Version ${VERSION}";;
   makemake) makemake;;
