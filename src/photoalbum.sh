@@ -212,7 +212,9 @@ function generate() {
   declare redirect_page=./html/index
   template redirect index
 
-  [ "${TARBALL_INCLUDE}" = yes ] && tarball
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    tarball
+  fi
 }
 
 if [ -z "${RC_FILE}" ]; then
