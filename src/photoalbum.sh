@@ -24,7 +24,7 @@ function tarball() {
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
 
   if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r base=$(basename "${INCOMING_DIR}")
+    declare -r base=$(basename "${INCOMING_DIR}")
 
     echo "Creating tarball ${DIST_DIR}/${tarball_name} from ${INCOMING_DIR}"
     cd $(dirname "${INCOMING_DIR}")
@@ -34,9 +34,9 @@ function tarball() {
 }
 
 function template() {
-  local -r template=${1}  ; shift
-  local -r html=${1}      ; shift
-  local -r dist_html="${DIST_DIR}/${html_dir}"
+  declare -r template=${1}  ; shift
+  declare -r html=${1}      ; shift
+  declare -r dist_html="${DIST_DIR}/${html_dir}"
 
   #echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
   [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
@@ -50,15 +50,15 @@ function generate() {
   fi
 
   if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r base=$(basename "${INCOMING_DIR}")
-    local -r now=$(date +'%Y-%m-%d-%H%M%S')
+    declare -r base=$(basename "${INCOMING_DIR}")
+    declare -r now=$(date +'%Y-%m-%d-%H%M%S')
     declare -r tarball_name="${base}-${now}${TARBALL_SUFFIX}"
   fi
 
   makescale
 
   find "${DIST_DIR}" -type f -name \*.html -delete
-  local -a dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
+  declare -a dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
     sort) )
 
   # Figure out wether we want sub-albums or not
@@ -69,7 +69,7 @@ function generate() {
   else
     declare is_subalbum=yes
     for dir in ${dirs[*]}; do
-      local basename=$(basename "${dir}")
+      declare basename=$(basename "${dir}")
       makealbumhtml \
         "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
@@ -78,8 +78,8 @@ function generate() {
   fi
 
   # Create top level index/redirect page
-  html_dir=./
-  redirect_page=./html/index
+  declare html_dir=./
+  declare redirect_page=./html/index
   template redirect index
 
   tarball
@@ -103,17 +103,15 @@ function makescale() {
 }
 
 function makealbumhtml() {
-  # First initialize some globals (used as template vars)
-  photos_dir="${1}" ; shift
-  html_dir="${1}"   ; shift
-  thumbs_dir="${1}" ; shift
-  backhref="${1}"   ; shift
+  declare photos_dir="${1}" ; shift
+  declare html_dir="${1}"   ; shift
+  declare thumbs_dir="${1}" ; shift
+  declare backhref="${1}"   ; shift
   declare is_subalbum=no
-
-  local -i num=1
-  local -i i=0
-  local name=page-${num}
-  local next=''
+  declare -i num=1
+  declare -i i=0
+  declare name=page-${num}
+  declare next=''
 
   template header ${name}
   template header-first-add ${name}
@@ -126,12 +124,12 @@ function makealbumhtml() {
       i=1
       : $(( num++ ))
 
-      next=page-${num}
+      declare next=page-${num}
       template next ${name}
       template footer ${name}
 
-      prev=${name}
-      name=${next}
+      declare prev=${name}
+      declare name=${next}
       template header ${name}
       template prev ${name}
     fi
@@ -167,13 +165,13 @@ function makealbumhtml() {
     declare prevredirect=${page}-0
     declare nextredirect=${page}-$((lastview+1))
 
-    redirect_page=$(( page-1 ))-${MAXPREVIEWS}
+    declare redirect_page=$(( page-1 ))-${MAXPREVIEWS}
     template redirect ${prevredirect}
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
-      redirect_page=$(( page+1 ))-1
+      declare redirect_page=$(( page+1 ))-1
     else
-      redirect_page=${page}-${lastview}
+      declare redirect_page=${page}-${lastview}
       template redirect 0-${MAXPREVIEWS}
 
       redirect_page=1-1
@@ -183,12 +181,12 @@ function makealbumhtml() {
   done
 
   # Create per album index/redirect page
-  redirect_page=page-1
+  declare redirect_page=page-1
   template redirect index
 }
 
 function makealbumindexhtml() {
-  local -a dirs=( "${1}" )
+  declare -a dirs=( "${1}" )
   html_dir=html
   backhref=..
 
