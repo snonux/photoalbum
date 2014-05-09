@@ -44,7 +44,7 @@ function template() {
 
   # Creating ${dist_html}/${html}.html from ${template}.tmpl
   [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
-  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}.html"
+  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}"
 }
 
 function scalephotos() {
@@ -75,10 +75,9 @@ function albumhtml() {
   declare -i i=0
 
   declare name=page-${num}
-  declare next=''
 
-  template header ${name}
-  template header-first-add ${name}
+  template header ${name}.html
+  template header-first-add ${name}.html
 
   cd "${DIST_DIR}/${photos_dir}" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
@@ -89,22 +88,22 @@ function albumhtml() {
       : $(( num++ ))
 
       declare next=page-${num}
-      template next ${name}
-      template footer ${name}
+      template next ${name}.html
+      template footer ${name}.html
 
       declare prev=${name}
       declare name=${next}
-      template header ${name}
-      template prev ${name}
+      template header ${name}.html
+      template prev ${name}.html
     fi
 
     # Preview page
-    template preview ${name}
+    template preview ${name}.html
 
     # View page
-    template header ${num}-${i}
-    template view ${num}-${i}
-    template footer ${num}-${i}
+    template header ${num}-${i}.html
+    template view ${num}-${i}.html
+    template footer ${num}-${i}.html
 
     if [ ! -f "${DIST_DIR}/${thumbs_dir}/${photo}" ]; then 
       dirname=$(dirname "${DIST_DIR}/${thumbs_dir}/${photo}")
@@ -117,7 +116,7 @@ function albumhtml() {
   done
 
   template footer $(cd "${DIST_DIR}/${html_dir}";ls -t page-*.html |
-  head -n 1 | sed 's/.html//') "${DIST_DIR}/${html_dir}"
+  head -n 1) "${DIST_DIR}/${html_dir}"
 
   cd "${DIST_DIR}/${html_dir}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
@@ -131,22 +130,22 @@ function albumhtml() {
     declare nextredirect=${page}-$((lastview+1))
 
     declare redirect_page=$(( page-1 ))-${MAXPREVIEWS}
-    template redirect ${prevredirect}
+    template redirect ${prevredirect}.html
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
       declare redirect_page=$(( page+1 ))-1
 
     else
       declare redirect_page=${page}-${lastview}
-      template redirect 0-${MAXPREVIEWS}
+      template redirect 0-${MAXPREVIEWS}.html
       redirect_page=1-1
     fi
-    template redirect ${nextredirect}
+    template redirect ${nextredirect}.html
   done
 
   # Create per album index/redirect page
   declare redirect_page=page-1
-  template redirect index
+  template redirect index.html
 }
 
 function albumindexhtml() {
@@ -155,8 +154,8 @@ function albumindexhtml() {
   declare html_dir=html
   declare backhref=..
 
-  template header index
-  template header-first-add index
+  template header index.html
+  template header-first-add index.html
 
   for dir in ${dirs[*]}; do
     declare basename=$(basename "$dir")
@@ -167,15 +166,15 @@ function albumindexhtml() {
     declare pages=$(( $pictures / $MAXPREVIEWS + 1 ))
 
     declare random_thumb="./thumbs/${basename}"/$(find \
-      "$thumbs_dir" -type f -printf "%f\n" |
-      head -n $random_num | tail -n 1)
+      "${thumbs_dir}" -type f -printf "%f\n" |
+      head -n ${random_num} | tail -n 1)
 
-    [ $pages -gt 1 ] && s=s || s=''
-    declare description="${pictures} pictures / ${pages} page$s"
-    template index-preview index 
+    [ ${pages} -gt 1 ] && declare s=s || declare s=''
+    declare description="${pictures} pictures / ${pages} page${s}"
+    template index-preview index.html
   done
 
-  template footer index
+  template footer index.html
 }
 
 function generate() {
@@ -216,7 +215,7 @@ function generate() {
   # Create top level index/redirect page
   declare html_dir=./
   declare redirect_page=./html/index
-  template redirect index
+  template redirect index.html
 
   if [ "${TARBALL_INCLUDE}" = yes ]; then
     tarball
