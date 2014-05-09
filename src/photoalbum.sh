@@ -70,7 +70,6 @@ function albumhtml() {
   declare html_dir="${1}"   ; shift
   declare thumbs_dir="${1}" ; shift
   declare backhref="${1}"   ; shift
-  declare is_subalbum=no
   declare -i num=1
   declare -i i=0
   declare name=page-${num}
@@ -149,6 +148,7 @@ function albumhtml() {
 
 function albumindexhtml() {
   declare -a dirs=( "${1}" )
+  declare is_subalbum=no
   html_dir=html
   backhref=..
 
