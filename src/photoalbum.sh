@@ -5,30 +5,14 @@
 
 declare -r VERSION='0.3.1develop'
 declare -r DEFAULTRC=/etc/default/photoalbum
-
 declare -r ARG1="${1}" ; shift
-declare    RC="${1}"   ; shift
-
-if [ -z "${RC}" ]; then
-  RC="${DEFAULTRC}"
-fi
-
-if [ ! -f "${RC}" ]; then
-  echo "Error: Can not find config file ${RC}" >&2
-  exit 1
-fi
+declare    RC_FILE="${1}"   ; shift
 
 function usage() {
   cat - <<USAGE >&2
   Usage: 
   $0 clean|init|version|generate|all [rcfile]
 USAGE
-}
-
-function init() {
-  for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
-    [ -d "${dir}" ] || mkdir -vp "${dir}"
-  done
 }
 
 function clean() {
@@ -40,54 +24,50 @@ function tarball() {
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
 
   if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r BASE=$(basename "${INCOMING_DIR}")
+    local -r base=$(basename "${INCOMING_DIR}")
 
-    echo "Creating tarball ${DIST_DIR}/${TARBALL_NAME} from ${INCOMING_DIR}"
+    echo "Creating tarball ${DIST_DIR}/${tarball_name} from ${INCOMING_DIR}"
     cd $(dirname "${INCOMING_DIR}")
-    tar $TAR_OPTS  -f "${DIST_DIR}/${TARBALL_NAME}" "${BASE}"
+    tar $TAR_OPTS  -f "${DIST_DIR}/${tarball_name}" "${base}"
     cd - &>/dev/null
   fi
 }
 
 function generate() {
   if [ ! -d "${INCOMING_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
-    exit 1
-  fi
-
-  if [ ! -d "${DIST_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
+    echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
     exit 1
   fi
 
   if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r BASE=$(basename "${INCOMING_DIR}")
-    local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
-    # New global variable
-    TARBALL_NAME="${BASE}-${NOW}${TARBALL_SUFFIX}"
+    local -r base=$(basename "${INCOMING_DIR}")
+    local -r now=$(date +'%Y-%m-%d-%H%M%S')
+    tarball_name="${base}-${now}${TARBALL_SUFFIX}"
   fi
 
   makescale
   find "${DIST_DIR}" -type f -name \*.html -delete
-  dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d | sort) )
+  local -a dirs=( $(find "${DIST_DIR}/photos" -mindepth 1 -maxdepth 1 -type d |
+    sort) )
 
   # Figure out wether we want sub-albums or not
-  if [[ "${SUB_ALBUMS}" != yes || ${#dirs[*]} -eq 0 ]]; then
+  if [[ "${SUB_albumS}" != yes || ${#dirs[*]} -eq 0 ]]; then
     makealbumhtml photos html thumbs ..
 
   else
-    IS_SUBALBUM=yes
+    is_subalbum=yes
     for dir in ${dirs[*]}; do
       basename=$(basename "${dir}")
-      makealbumhtml "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
+      makealbumhtml \
+        "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
     done
     # Create an album selection screen
-    makealbumoverviewhtml <<< ${dirs[*]}
+    makealbumindexhtml "${dirs[*]}"
   fi
 
   # Create top level index/redirect page
-  HTML_DIR=./
-  REDIRECT_PAGE=./html/index
+  html_dir=./
+  redirect_page=./html/index
   template redirect index
 
   tarball
@@ -96,7 +76,7 @@ function generate() {
 function template() {
   local -r template=${1}  ; shift
   local -r html=${1}      ; shift
-  local -r dist_html="${DIST_DIR}/${HTML_DIR}"
+  local -r dist_html="${DIST_DIR}/${html_dir}"
 
   #echo "Creating ${dist_html}/${html}.html from ${template}.tmpl"
   [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
@@ -122,19 +102,20 @@ function makescale() {
 
 function makealbumhtml() {
   # First initialize some globals (used as template vars)
-  PHOTOS_DIR="${1}" ; shift
-  HTML_DIR="${1}"   ; shift
-  THUMBS_DIR="${1}" ; shift
-  BACKHREF="${1}"   ; shift
+  photos_dir="${1}" ; shift
+  html_dir="${1}"   ; shift
+  thumbs_dir="${1}" ; shift
+  backhref="${1}"   ; shift
 
   local -i num=1
   local -i i=0
   local name=page-${num}
+  local next=''
 
   template header ${name}
   template header-first-add ${name}
 
-  cd "${DIST_DIR}/${PHOTOS_DIR}" && find ./ -type f | sort | sed 's;^\./;;' |
+  cd "${DIST_DIR}/${photos_dir}" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
 
@@ -160,19 +141,19 @@ function makealbumhtml() {
     template view ${num}-${i}
     template footer ${num}-${i}
 
-    if [ ! -f "${DIST_DIR}/${THUMBS_DIR}/${photo}" ]; then 
-      echo "Creating thumb ${DIST_DIR}/${THUMBS_DIR}/${photo}";
-      dirname=$(dirname "${DIST_DIR}/${THUMBS_DIR}/${photo}")
+    if [ ! -f "${DIST_DIR}/${thumbs_dir}/${photo}" ]; then 
+      echo "Creating thumb ${DIST_DIR}/${thumbs_dir}/${photo}";
+      dirname=$(dirname "${DIST_DIR}/${thumbs_dir}/${photo}")
       [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
-        "${DIST_DIR}/${THUMBS_DIR}/${photo}"
+        "${DIST_DIR}/${thumbs_dir}/${photo}"
     fi
   done
 
-  template footer $(cd "${DIST_DIR}/${HTML_DIR}";ls -t page-*.html |
-  head -n 1 | sed 's/.html//') "${DIST_DIR}/${HTML_DIR}"
+  template footer $(cd "${DIST_DIR}/${html_dir}";ls -t page-*.html |
+  head -n 1 | sed 's/.html//') "${DIST_DIR}/${html_dir}"
 
-  cd "${DIST_DIR}/${HTML_DIR}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
+  cd "${DIST_DIR}/${html_dir}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
     declare page=$(ls -t ${prefix}-*.html |
     head -n 1 | sed 's#\(.*\)-.*.html#\1#')
@@ -183,45 +164,47 @@ function makealbumhtml() {
     declare prevredirect=${page}-0
     declare nextredirect=${page}-$((lastview+1))
 
-    REDIRECT_PAGE=$(( page-1 ))-${MAXPREVIEWS}
+    redirect_page=$(( page-1 ))-${MAXPREVIEWS}
     template redirect ${prevredirect}
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
-      REDIRECT_PAGE=$(( page+1 ))-1
+      redirect_page=$(( page+1 ))-1
     else
-      REDIRECT_PAGE=${page}-${lastview}
+      redirect_page=${page}-${lastview}
       template redirect 0-${MAXPREVIEWS}
 
-      REDIRECT_PAGE=1-1
+      redirect_page=1-1
     fi
 
     template redirect ${nextredirect}
   done
 
   # Create per album index/redirect page
-  REDIRECT_PAGE=page-1
+  redirect_page=page-1
   template redirect index
 }
 
-function makealbumoverviewhtml() {
-  HTML_DIR=html
-  BACKHREF=..
-  IS_SUBALBUM=no
+function makealbumindexhtml() {
+  local -a dirs=( "${1}" )
+  html_dir=html
+  backhref=..
+  is_subalbum=no
 
   template header index
   template header-first-add index
 
-  while read dir; do
+  for dir in ${dirs[*]}; do
     basename=$(basename "$dir")
-    ALBUM=$basename
+    album=$basename
     thumbs_dir="${DIST_DIR}/thumbs/${basename}"
     pictures=$(ls "${thumbs_dir}" | wc -l)
-    random=$(( 1 + $RANDOM % $pictures ))
-    RANDOM_THUMB="./thumbs/${basename}"/$(find "$thumbs_dir" -type f -printf "%f\n" |
-    head -n $random | tail -n 1)
+    random_num=$(( 1 + $RANDOM % $pictures ))
+    random_thumb="./thumbs/${basename}"/$(find \
+      "$thumbs_dir" -type f -printf "%f\n" |
+      head -n $random_num | tail -n 1)
     pages=$(( $pictures / $MAXPREVIEWS + 1))
-    test $pages -gt 1 && s=s || s=''
-    DESCRIPTION="${pictures} pictures / ${pages} page$s"
+    [ $pages -gt 1 ] && s=s || s=''
+    description="${pictures} pictures / ${pages} page$s"
     template index-preview index 
   done
 
@@ -232,44 +215,35 @@ function makemake() {
   [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
   cat <<MAKEFILE > ./Makefile
 all:
-	photoalbum all photoalbumrc
+	photoalbum generate photoalbumrc
 clean:
 	photoalbum clean photoalbumrc
 MAKEFILE
   echo You may now customize ./photoalbumrc and run make
 }
 
-if [ -f "${RC}" ]; then
-  source "${RC}"
-else
+if [ -z "${RC_FILE}" ]; then
   if [ -f ~/.photoalbumrc ]; then
-    source ~/.photoalbumrc
+    RC_FILE=~/.photoalbumrc
+  else
+    RC_FILE="${DEFAULTRC}"
   fi
 fi
 
+if [ ! -f "${RC_FILE}" ]; then
+  echo "Error: Can not find config file ${RC_FILE}" >&2
+  exit 1
+fi
+
+source "${RC_FILE}"
+
 case "${ARG1}" in
-  all)
-    init
-    generate
-    ;;
-  init)
-    init
-    ;;
-  clean)
-    clean
-    ;;
-  generate)
-    generate
-    ;;
-  version)
-    echo "This is Photoalbum Version ${VERSION}"
-    ;;
-  makemake)
-    makemake
-    ;;
-  *)
-    usage
-    ;;
+  all)      clean; generate;;
+  clean)    clean;;
+  generate) generate;;
+  version)  echo "This is Photoalbum Version ${VERSION}";;
+  makemake) makemake;;
+  *)        usage;;
 esac
 
 exit 0

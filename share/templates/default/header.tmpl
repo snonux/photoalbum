@@ -1,5 +1,5 @@
-if [ "${IS_SUBALBUM}" = yes ]; then
-  GOTO_OVERVIEW="<br /><br /><a href='${BACKHREF}/index.html'>Go to Album overview</a>"
+if [ "${is_subalbum}" = yes ]; then
+  GOTO_OVERVIEW="<br /><br /><a href='${backhref}/index.html'>Go to Album overview</a>"
 fi
 cat <<END
 <html>
@@ -10,6 +10,7 @@ cat <<END
     background-color: #000000;
     color: #FFFFFF;
     font-family: verdana, sans-serif;
+    width: 100%;
   }
   a {
     color: #FFFFFF;

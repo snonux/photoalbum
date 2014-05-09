@@ -4,7 +4,7 @@ photoalbum - photoalbum is a minimal bash script for linux to generate static we
 
 =head1 SYNOPSIS
 
-photoalbum clean|init|version|generate|all [rcfile]
+photoalbum clean|version|generate|all [rcfile]
 photoalbum makemake
 
 =over
@@ -12,10 +12,6 @@ photoalbum makemake
 =item clean
 
 Cleans up the working space
-
-=item init
-
-Initializes the working space
 
 =item version
 
@@ -27,7 +23,7 @@ Generates the static photoalbum
 
 =item all
 
-This just runs 'clean init generate' right after another.
+This just runs 'clean generate' right after another.
 
 =item makemake
 
@@ -40,8 +36,6 @@ Creates a Makefile and photoalbumrc in the current working directory.
 =head2 TUTORIAL
 
 * See if /etc/default/photoalbum fits your needs. If not, copy /etc/default/photoalbum to ~/.photoalbumrc in order to customize it.
-
-* Run 'photoalbum init'
 
 * Copy all images wanted to the incoming folder (see config file)
 
