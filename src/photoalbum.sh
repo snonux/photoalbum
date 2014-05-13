@@ -3,7 +3,7 @@
 # photoalbum (c) 2011 - 2014 by Paul C. Buetow
 # http://photoalbum.buetow.org
 
-declare -r VERSION='0.3.1develop'
+declare -r VERSION='PHOTOALBUMVERSION'
 declare -r DEFAULTRC=/etc/default/photoalbum
 declare -r ARG1="${1}"    ; shift
 declare    RC_FILE="${1}" ; shift

@@ -1,3 +1,9 @@
+photoalbum (0.4.1) stable; urgency=low
+
+  * Fix the version string
+
+ -- Paul Buetow <paul@buetow.org>  Tue, 13 May 2014 22:16:57 +0200
+
 photoalbum (0.4.0) stable; urgency=low
 
   * Support of sub-albums including album overview page
