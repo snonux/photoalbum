@@ -1,120 +1,85 @@
 #!/bin/bash
 
-# photoalbum (c) 2011 - 2014 by Paul Buetow
+# photoalbum (c) 2011 - 2014 by Paul C. Buetow
 # http://photoalbum.buetow.org
 
-declare -r ARG1="${1}"; shift
-declare RC="${1}"     ; shift
+readonly VERSION='PHOTOALBUMVERSION'
+readonly DEFAULTRC=/etc/default/photoalbum
+readonly ARG1="${1}"    ; shift
+declare  RC_FILE="${1}" ; shift
 
-declare -r VERSION='PHOTOALBUMVERSION'
-declare -r DEFAULTRC=/etc/default/photoalbum
-
-if [ -z "${RC}" ]; then
-  RC="${DEFAULTRC}"
-fi
-
-if [ ! -f "${RC}" ]; then
-  echo "Error: Can not find config file ${RC}" >&2
-  exit 1
-fi
-
-usage() {
+function usage() {
   cat - <<USAGE >&2
   Usage: 
   $0 clean|init|version|generate|all [rcfile]
 USAGE
 }
 
-init() {
-  for dir in "${INCOMING_DIR}" "${DIST_DIR}/photos" "${DIST_DIR}/thumbs" "${DIST_DIR}/html"; do 
-    [ -d "${dir}" ] || mkdir -vp "${dir}"
-  done
+function makemake() {
+  [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
+  cat <<MAKEFILE > ./Makefile
+all:
+	photoalbum generate photoalbumrc
+clean:
+	photoalbum clean photoalbumrc
+MAKEFILE
+  echo You may now customize ./photoalbumrc and run make
 }
 
-clean() {
-  echo "Not deleting ${INCOMING_DIR}"
-  [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}"
-}
-
-tarball() {
+function tarball() {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
+  readonly base=$(basename "${INCOMING_DIR}")
 
-  if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r BASE=$(basename "${INCOMING_DIR}")
-
-    echo "Creating tarball ${DIST_DIR}/${TARBALL_NAME} from ${INCOMING_DIR}"
-    cd $(dirname "${INCOMING_DIR}")
-    tar $TAR_OPTS  -f "${DIST_DIR}/${TARBALL_NAME}" "${BASE}"
-    cd - &>/dev/null
-  fi
+  echo "Creating tarball ${DIST_DIR}/${tarball_name} from ${INCOMING_DIR}"
+  cd $(dirname "${INCOMING_DIR}")
+  tar $TAR_OPTS  -f "${DIST_DIR}/${tarball_name}" "${base}"
+  cd - &>/dev/null
 }
 
-generate() {
-  if [ ! -d "${INCOMING_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${INCOMING_DIR}" >&2
-    exit 1
-  fi
-  if [ ! -d "${DIST_DIR}" ]; then
-    echo "ERROR: You may run init first, no such directory: ${DIST_DIR}" >&2
-    exit 1
-  fi
+function template() {
+  readonly template=${1}  ; shift
+  readonly html=${1}      ; shift
+  readonly dist_html="${DIST_DIR}/${html_dir}"
 
-  if [ "${TARBALL_INCLUDE}" = yes ]; then
-    local -r BASE=$(basename "${INCOMING_DIR}")
-    local -r NOW=$(date +'%Y-%m-%d-%H%M%S')
-    # New global variable
-    TARBALL_NAME="${BASE}-${NOW}${TARBALL_SUFFIX}"
-  fi
-
-  scale
-  find "${DIST_DIR}/html" -type f -name \*.html -delete
-  makedist 1
-  template index ../index
-  tarball
+  # Creating ${dist_html}/${html}.html from ${template}.tmpl
+  [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
+  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}"
 }
 
-template() {
-  local -r template=${1} ; shift
-  local -r html=${1}     ; shift
+function scalephotos() {
+  cd "${INCOMING_DIR}" && find ./ -type f | sort |
+  while read photo; do
+    declare photo=$(sed 's#^\./##' <<< "${photo}")
+    declare destphoto="${DIST_DIR}/photos/${photo}"
+    declare destphoto_nospace=${destphoto// /_}
 
-  source "${TEMPLATE_DIR}/${template}.tmpl" >> "${DIST_DIR}/html/${html}.html"
-}
+    declare dirname=$(dirname "${destphoto}")
+    [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
 
-scale() {
-  cd "${INCOMING_DIR}" && find ./ -type f | sort | while read photo; do
-    photo=$(sed 's#^\./##' <<< "${photo}")
-
-    if [ ! -f "${DIST_DIR}/photos/${photo}" ]; then
-      # Flatten directories / to __
-      if [[ "${photo}" =~ / ]]; then
-        destphoto="${photo//\//__}"
-      else
-        destphoto="${photo}"
-      fi
-
-      echo "Scaling ${photo} to ${DIST_DIR}/photos/${destphoto}"
-
+    if [ ! -f "${destphoto_nospace}" ]; then
+      echo "Scaling ${photo} to ${destphoto_nospace}"
       convert -auto-orient \
-        -geometry ${GEOMETRY} "${photo}" "${DIST_DIR}/photos/${destphoto}"
+        -geometry ${GEOMETRY} "${photo}" "${destphoto_nospace}"
     fi
   done
-
-  echo 'Removing spaces from file names'
-  find "${DIST_DIR}/photos" -type f -name '* *' | while read file; do
-    rename 's/ /_/g' "${file}" 
-  done
 }
 
-makedist() {
-  local num=${1} ; shift
-  local name=page-${num}
-  local -i i=0
+function albumhtml() {
+  declare photos_dir="${1}" ; shift
+  declare html_dir="${1}"   ; shift
+  declare thumbs_dir="${1}" ; shift
+  declare backhref="${1}"   ; shift
 
-  template header ${name} 
-  template header-first-add ${name}
+  declare -i num=1
+  declare -i i=0
 
-  cd "${DIST_DIR}/photos" && find ./ -type f | sort | sed 's;^\./;;' |
+  declare name=page-${num}
+
+  template header ${name}.html
+  template header-first-add ${name}.html
+
+  cd "${DIST_DIR}/${photos_dir}" && find ./ -type f | sort | sed 's;^\./;;' |
   while read photo; do 
     : $(( i++ ))
 
@@ -122,34 +87,38 @@ makedist() {
       i=1
       : $(( num++ ))
 
-      next=page-${num}
-      template next ${name}
-      template footer ${name}
+      declare next=page-${num}
+      template next ${name}.html
+      template footer ${name}.html
 
-      prev=${name}
-      name=${next}
-      template header ${name} 
-      template prev ${name}
+      declare prev=${name}
+      declare name=${next}
+      template header ${name}.html
+      template prev ${name}.html
     fi
 
     # Preview page
-    template preview ${name}
+    template preview ${name}.html
 
     # View page
-    template header ${num}-${i}
-    template view ${num}-${i}
-    template footer ${num}-${i}
+    template header ${num}-${i}.html
+    template view ${num}-${i}.html
+    template footer ${num}-${i}.html
 
-    if [ ! -f "${DIST_DIR}/thumbs/${photo}" ]; then 
-      echo "Creating thumb for ${photo}";
+    if [ ! -f "${DIST_DIR}/${thumbs_dir}/${photo}" ]; then 
+      dirname=$(dirname "${DIST_DIR}/${thumbs_dir}/${photo}")
+      [ ! -d "${dirname}" ] && mkdir -p "${dirname}"
+
+      echo "Creating thumb ${DIST_DIR}/${thumbs_dir}/${photo}";
       convert -geometry x${THUMBGEOMETRY} "${photo}" \
-        "${DIST_DIR}/thumbs/${photo}"
+        "${DIST_DIR}/${thumbs_dir}/${photo}"
     fi
   done
 
-  template footer $(cd "${DIST_DIR}/html";ls -t page-*.html | head -n 1 | sed 's/.html//')
+  template footer \
+    $(cd "${DIST_DIR}/${html_dir}";ls -t page-*.html | head -n 1)
 
-  cd "${DIST_DIR}/html" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
+  cd "${DIST_DIR}/${html_dir}" && ls *.html | grep -v page- | cut -d'-' -f1 | uniq |
   while read prefix; do 
     declare page=$(ls -t ${prefix}-*.html |
     head -n 1 | sed 's#\(.*\)-.*.html#\1#')
@@ -160,49 +129,120 @@ makedist() {
     declare prevredirect=${page}-0
     declare nextredirect=${page}-$((lastview+1))
 
-    redirectpage=$(( page-1 ))-${MAXPREVIEWS}
-    template redirect ${prevredirect}
+    declare redirect_page=$(( page-1 ))-${MAXPREVIEWS}
+    template redirect ${prevredirect}.html
 
     if [ ${lastview} -eq ${MAXPREVIEWS} ]; then
-      redirectpage=$(( page+1 ))-1
+      declare redirect_page=$(( page+1 ))-1
+
     else
-      redirectpage=${page}-${lastview}
-      template redirect 0-${MAXPREVIEWS}
-
-      redirectpage=1-1
+      declare redirect_page=${page}-${lastview}
+      template redirect 0-${MAXPREVIEWS}.html
+      redirect_page=1-1
     fi
-
-    template redirect ${nextredirect}
+    template redirect ${nextredirect}.html
   done
+
+  # Create per album index/redirect page
+  declare redirect_page=page-1
+  template redirect index.html
 }
 
-source "${RC}"
+function albumindexhtml() {
+  declare -a dirs=( "${1}" )
+  declare is_subalbum=no
+  declare html_dir=html
+  declare backhref=..
 
-if [ -f ~/.photoalbumrc ]; then
-  source ~/.photoalbumrc
+  template header index.html
+  template header-first-add index.html
+
+  for dir in ${dirs[*]}; do
+    declare basename=$(basename "$dir")
+    declare album=$basename
+    declare thumbs_dir="${DIST_DIR}/thumbs/${basename}"
+    declare pictures=$(ls "${thumbs_dir}" | wc -l)
+    declare random_num=$(( 1 + $RANDOM % $pictures ))
+    declare pages=$(( $pictures / $MAXPREVIEWS + 1 ))
+
+    declare random_thumb="./thumbs/${basename}"/$(find \
+      "${thumbs_dir}" -type f -printf "%f\n" |
+      head -n ${random_num} | tail -n 1)
+
+    [ ${pages} -gt 1 ] && declare s=s || declare s=''
+    declare description="${pictures} pictures / ${pages} page${s}"
+    template index-preview index.html
+  done
+
+  template footer index.html
+}
+
+function generate() {
+  if [ ! -d "${INCOMING_DIR}" ]; then
+    echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
+    exit 1
+  fi
+
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    readonly base=$(basename "${INCOMING_DIR}")
+    readonly now=$(date +'%Y-%m-%d-%H%M%S')
+    readonly tarball_name="${base}-${now}${TARBALL_SUFFIX}"
+  fi
+
+  scalephotos
+
+  find "${DIST_DIR}" -type f -name \*.html -delete
+  declare -a dirs=( $(find "${DIST_DIR}/photos" \
+    -mindepth 1 -maxdepth 1 -type d | sort) )
+
+  # Figure out wether we want sub-albums or not
+  if [[ "${SUB_ALBUMS}" != yes || ${#dirs[*]} -eq 0 ]]; then
+    declare is_subalbum=no
+    albumhtml photos html thumbs ..
+
+  else
+    declare is_subalbum=yes
+    for dir in ${dirs[*]}; do
+      declare basename=$(basename "${dir}")
+      albumhtml \
+        "photos/${basename}" "html/${basename}" "thumbs/${basename}" ../..
+    done
+
+    # Create an album selection screen
+    albumindexhtml "${dirs[*]}"
+  fi
+
+  # Create top level index/redirect page
+  declare html_dir=./
+  declare redirect_page=./html/index
+  template redirect index.html
+
+  if [ "${TARBALL_INCLUDE}" = yes ]; then
+    tarball
+  fi
+}
+
+if [ -z "${RC_FILE}" ]; then
+  if [ -f ~/.photoalbumrc ]; then
+    RC_FILE=~/.photoalbumrc
+  else
+    RC_FILE="${DEFAULTRC}"
+  fi
 fi
 
+if [ ! -f "${RC_FILE}" ]; then
+  echo "Error: Can not find config file ${RC_FILE}" >&2
+  exit 1
+fi
+
+source "${RC_FILE}"
+
 case "${ARG1}" in
-  all)
-    clean
-    init
-    generate
-    ;;
-  init)
-    init
-    ;;
-  clean)
-    clean
-    ;;
-  generate)
-    generate
-    ;;
-  version)
-    echo "This is Photoalbum Version ${VERSION}"
-    ;;
-  *)
-    usage
-    ;;
+  clean)    [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}";;
+  generate) generate;;
+  version)  echo "This is Photoalbum Version ${VERSION}";;
+  makemake) makemake;;
+  *)        usage;;
 esac
 
 exit 0

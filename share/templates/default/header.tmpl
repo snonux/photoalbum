@@ -1,24 +1,28 @@
+if [ "${is_subalbum}" = yes ]; then
+  GOTO_OVERVIEW="<br /><br /><a href='${backhref}/index.html'>Go to Album overview</a>"
+fi
 cat <<END
 <html>
 <head>
-<title>$TITLE</title>
+<title>${TITLE}</title>
 <style type="text/css">
-	body {
-		background-color: #000000;
-		color: #FFFFFF;
-		font-family: verdana, sans-serif;
-	}
-	a {
-		color: #FFFFFF;
-	}
-	hr {
-		color: #FFFFFF;
-		background-color: #FFFFFF;
-		height: 1px;
-	}
+  body {
+    background-color: #000000;
+    color: #FFFFFF;
+    font-family: verdana, sans-serif;
+    width: 100%;
+  }
+  a {
+    color: #FFFFFF;
+  }
+  hr {
+    color: #FFFFFF;
+    background-color: #FFFFFF;
+    height: 1px;
+  }
 </style>
 </head>
 <body>
-$TITLE
+${TITLE} ${GOTO_OVERVIEW}
 <hr />
 END

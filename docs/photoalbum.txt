@@ -3,13 +3,10 @@ NAME
     static web photo albums.
 
 SYNOPSIS
-    photoalbum clean|init|version|generate|all [rcfile]
+    photoalbum clean|version|generate [rcfile] photoalbum makemake
 
     clean
         Cleans up the working space
-
-    init
-        Initializes the working space
 
     version
         Prints out the version
@@ -17,14 +14,14 @@ SYNOPSIS
     generate
         Generates the static photoalbum
 
-    all This just runs 'clean init generate' right after another.
+    makemake
+        Creates a Makefile and photoalbumrc in the current working
+        directory.
 
   RCFILE
   TUTORIAL
     * See if /etc/default/photoalbum fits your needs. If not, copy
     /etc/default/photoalbum to ~/.photoalbumrc in order to customize it.
-
-    * Run 'photoalbum init'
 
     * Copy all images wanted to the incoming folder (see config file)
 
