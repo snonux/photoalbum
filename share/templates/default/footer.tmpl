@@ -5,12 +5,12 @@ END
 
 if [ "${TARBALL_INCLUDE}" = 'yes' ]; then
 cat <<END
-Download all photos in original size <a href='../${TARBALL_NAME}'>here</a><br /><br />
+Download all photos in original size <a href='${backhref}/${tarball_name}'>here</a><br /><br />
 END
 fi
 
 cat <<END
-Page generated at $(date) using Bash, ImageMagick and Git at $(uname); &lt;photoalbum@mx.buetow.org&gt;
+Page generated at $(date) using Bash and ImageMagick at $(uname); &lt;photoalbum@mx.buetow.org&gt;
 </body>
 </html>
 END

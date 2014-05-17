@@ -1,3 +1,25 @@
+photoalbum (0.4.1) stable; urgency=low
+
+  * Fix the version string
+
+ -- Paul Buetow <paul@buetow.org>  Tue, 13 May 2014 22:16:57 +0200
+
+photoalbum (0.4.0) stable; urgency=low
+
+  * Support of sub-albums including album overview page
+  * Add makemake argument
+  * Remove all argument
+  * Dont scale image if destination already exists 
+  * Major refactoring of the bash code
+
+ -- Paul Buetow <paul@buetow.org>  Tue, 13 May 2014 22:09:28 +0200
+
+photoalbum (0.3.1develop) stable; urgency=low
+
+  * Dev version
+
+ -- Paul Buetow <paul@buetow.org>  Wed, 07 May 2014 14:58:51 +0200
+
 photoalbum (0.3.0) stable; urgency=low
 
   * Add another template set: minimal
