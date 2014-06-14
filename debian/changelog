@@ -1,3 +1,9 @@
+photoalbum (0.4.2) stable; urgency=low
+
+  * Add Package for Debian Jessie
+
+ -- Paul Buetow <paul@buetow.org>  Sat, 14 Jun 2014 14:45:57 +0200
+
 photoalbum (0.4.1) stable; urgency=low
 
   * Fix the version string
