@@ -1,3 +1,9 @@
+photoalbum (0.4.3) stable; urgency=low
+
+  * Merge
+
+ -- Paul Buetow <paul@buetow.org>  Sat, 14 Jun 2014 14:46:53 +0200
+
 photoalbum (0.4.2) stable; urgency=low
 
   * Add Package for Debian Jessie
