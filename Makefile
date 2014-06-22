@@ -25,6 +25,8 @@ documentation:
 	pod2man --release="$(NAME) $$(cat .version)" \
 		--center="User Commands" ./docs/$(NAME).pod > ./docs/$(NAME).1
 	pod2text ./docs/$(NAME).pod > ./docs/$(NAME).txt
+	# For github page
+	cp ./docs/$(NAME).pod README.pod
 deb: all
 	dpkg-buildpackage 
 dch: 
