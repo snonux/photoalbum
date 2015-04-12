@@ -8,14 +8,14 @@ declare -r DEFAULTRC=/etc/default/photoalbum
 declare -r ARG1="${1}"    ; shift
 declare    RC_FILE="${1}" ; shift
 
-function usage() {
+function usage {
   cat - <<USAGE >&2
   Usage: 
-  $0 clean|init|version|generate|all [rcfile]
+  $0 clean|generate|version|makemake|recursive:DIR [rcfile]
 USAGE
 }
 
-function makemake() {
+function makemake {
   [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
   cat <<MAKEFILE > ./Makefile
 all:
@@ -26,7 +26,7 @@ MAKEFILE
   echo You may now customize ./photoalbumrc and run make
 }
 
-function tarball() {
+function tarball {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
   declare -r base=$(basename "${INCOMING_DIR}")
@@ -37,7 +37,7 @@ function tarball() {
   cd - &>/dev/null
 }
 
-function template() {
+function template {
   declare -r template=${1}  ; shift
   declare -r html=${1}      ; shift
   declare -r dist_html="${DIST_DIR}/${html_dir}"
@@ -47,8 +47,8 @@ function template() {
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}"
 }
 
-function scalephotos() {
-  cd "${INCOMING_DIR}" && find ./ -type f | sort |
+function scalephotos {
+  cd "${INCOMING_DIR}" && find ./ -type f $FIND_ARGS | sort |
   while read photo; do
     declare photo=$(sed 's#^\./##' <<< "${photo}")
     declare destphoto="${DIST_DIR}/photos/${photo}"
@@ -65,7 +65,7 @@ function scalephotos() {
   done
 }
 
-function albumhtml() {
+function albumhtml {
   declare photos_dir="${1}" ; shift
   declare html_dir="${1}"   ; shift
   declare thumbs_dir="${1}" ; shift
@@ -148,7 +148,7 @@ function albumhtml() {
   template redirect index.html
 }
 
-function albumindexhtml() {
+function albumindexhtml {
   declare -a dirs=( "${1}" )
   declare is_subalbum=no
   declare html_dir=html
@@ -177,7 +177,7 @@ function albumindexhtml() {
   template footer index.html
 }
 
-function generate() {
+function generate {
   if [ ! -d "${INCOMING_DIR}" ]; then
     echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
     exit 1
@@ -189,6 +189,7 @@ function generate() {
     declare -r tarball_name="${base}-${now}${TARBALL_SUFFIX}"
   fi
 
+  test ! -d "${DIST_DIR}/photos" && mkdir -p "${DIST_DIR}/photos"
   scalephotos
 
   find "${DIST_DIR}" -type f -name \*.html -delete
@@ -222,6 +223,28 @@ function generate() {
   fi
 }
 
+function recursive {
+  local dir=$(cut -d: -f2 <<< $ARG1)
+
+  if [ ! -d $dir ]; then
+    echo "Directory $dir does not exist!"
+    exit 1
+  fi
+
+  find $dir -type d | grep -v '\.HTML' | while read d; do
+    test ! -d $d.HTML && mkdir $d.HTML 
+    rc_file=$d.HTML/photoalbumrc
+    cd $d.HTML && cp $RC_FILE $rc_file && chmod 644 $rc_file
+    echo "INCOMING_DIR=$d" >> $rc_file
+    echo "DIST_DIR=$d.HTML" >> $rc_file
+    echo "ORIGINAL_BASEPATH=../../$(basename $d)" >> $rc_file
+    echo 'FIND_ARGS="-maxdepth 1"' >> $rc_file
+    photoalbum generate $rc_file
+    cd - &>/dev/null
+    test -d $d.HTML && test ! -d $d.HTML/thumbs && rm -Rf $d.HTML
+  done
+}
+
 if [ -z "${RC_FILE}" ]; then
   if [ -f ~/.photoalbumrc ]; then
     RC_FILE=~/.photoalbumrc
@@ -238,12 +261,12 @@ fi
 source "${RC_FILE}"
 
 case "${ARG1}" in
-  clean)    [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}";;
-  generate) generate;;
-  version)  echo "This is Photoalbum Version ${VERSION}";;
-  makemake) makemake;;
-  *)        usage;;
+  clean)      [ -d "${DIST_DIR}" ] && rm -Rf "${DIST_DIR}";;
+  generate)   generate;;
+  version)    echo "This is Photoalbum Version ${VERSION}";;
+  makemake)   makemake;;
+  recursive*) recursive;;
+  *)          usage;;
 esac
 
 exit 0
-

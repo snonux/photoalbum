@@ -10,5 +10,12 @@ cat <<END
 <br />
 <br />
 <a href="${backhref}/${photos_dir}/${photo}">Direct link</a>
+END
+if [ "${ORIGINAL_BASEPATH}x" != x ]; then
+cat <<END
+<a href="${ORIGINAL_BASEPATH}/${photo}">Original</a>
+END
+fi
+cat <<END
 <h3>${photo}</h3>
 END

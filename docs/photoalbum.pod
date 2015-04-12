@@ -4,7 +4,7 @@ photoalbum - photoalbum is a minimal bash script for linux to generate static we
 
 =head1 SYNOPSIS
 
-photoalbum clean|version|generate [rcfile]
+photoalbum clean|generate|version|recursive:DIR [rcfile]
 photoalbum makemake
 
 =over
