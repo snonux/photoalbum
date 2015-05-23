@@ -3,10 +3,10 @@
 # photoalbum (c) 2011 - 2014 by Paul C. Buetow
 # http://photoalbum.buetow.org
 
-declare -r VERSION='PHOTOALBUMVERSION'
-declare -r DEFAULTRC=/etc/default/photoalbum
-declare -r ARG1="${1}"    ; shift
-declare    RC_FILE="${1}" ; shift
+readonly VERSION='PHOTOALBUMVERSION'
+readonly DEFAULTRC=/etc/default/photoalbum
+readonly ARG1="${1}"    ; shift
+declare  RC_FILE="${1}" ; shift
 
 function usage {
   cat - <<USAGE >&2
@@ -29,7 +29,7 @@ MAKEFILE
 function tarball {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
-  declare -r base=$(basename "${INCOMING_DIR}")
+  readonly base=$(basename "${INCOMING_DIR}")
 
   echo "Creating tarball ${DIST_DIR}/${tarball_name} from ${INCOMING_DIR}"
   cd $(dirname "${INCOMING_DIR}")
@@ -37,10 +37,10 @@ function tarball {
   cd - &>/dev/null
 }
 
-function template {
-  declare -r template=${1}  ; shift
-  declare -r html=${1}      ; shift
-  declare -r dist_html="${DIST_DIR}/${html_dir}"
+function template() {
+  readonly template=${1}  ; shift
+  readonly html=${1}      ; shift
+  readonly dist_html="${DIST_DIR}/${html_dir}"
 
   # Creating ${dist_html}/${html}.html from ${template}.tmpl
   [ ! -d "${dist_html}" ] && mkdir -p "${dist_html}"
@@ -184,9 +184,9 @@ function generate {
   fi
 
   if [ "${TARBALL_INCLUDE}" = yes ]; then
-    declare -r base=$(basename "${INCOMING_DIR}")
-    declare -r now=$(date +'%Y-%m-%d-%H%M%S')
-    declare -r tarball_name="${base}-${now}${TARBALL_SUFFIX}"
+    readonly base=$(basename "${INCOMING_DIR}")
+    readonly now=$(date +'%Y-%m-%d-%H%M%S')
+    readonly tarball_name="${base}-${now}${TARBALL_SUFFIX}"
   fi
 
   test ! -d "${DIST_DIR}/photos" && mkdir -p "${DIST_DIR}/photos"
