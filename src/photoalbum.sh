@@ -8,14 +8,14 @@ declare -r DEFAULTRC=/etc/default/photoalbum
 declare -r ARG1="${1}"    ; shift
 declare    RC_FILE="${1}" ; shift
 
-function usage {
+usage () {
   cat - <<USAGE >&2
   Usage: 
   $0 clean|generate|version|makemake|recursive:DIR [rcfile]
 USAGE
 }
 
-function makemake {
+makemake () {
   [ ! -f ./photoalbumrc ] && cp /etc/default/photoalbum ./photoalbumrc
   cat <<MAKEFILE > ./Makefile
 all:
@@ -26,7 +26,7 @@ MAKEFILE
   echo You may now customize ./photoalbumrc and run make
 }
 
-function tarball {
+tarball () {
   # Cleanup tarball from prev run if any
   find "${DIST_DIR}" -maxdepth 1 -type f -name \*.tar -delete
   declare -r base=$(basename "${INCOMING_DIR}")
@@ -37,7 +37,7 @@ function tarball {
   cd - &>/dev/null
 }
 
-function template {
+template () {
   declare -r template=${1}  ; shift
   declare -r html=${1}      ; shift
   declare -r dist_html="${DIST_DIR}/${html_dir}"
@@ -47,7 +47,7 @@ function template {
   source "${TEMPLATE_DIR}/${template}.tmpl" >> "${dist_html}/${html}"
 }
 
-function scalephotos {
+scalephotos () {
   cd "${INCOMING_DIR}" && find ./ -type f $FIND_ARGS | sort |
   while read photo; do
     declare photo=$(sed 's#^\./##' <<< "${photo}")
@@ -65,7 +65,7 @@ function scalephotos {
   done
 }
 
-function albumhtml {
+albumhtml () {
   declare photos_dir="${1}" ; shift
   declare html_dir="${1}"   ; shift
   declare thumbs_dir="${1}" ; shift
@@ -148,7 +148,7 @@ function albumhtml {
   template redirect index.html
 }
 
-function albumindexhtml {
+albumindexhtml () {
   declare -a dirs=( "${1}" )
   declare is_subalbum=no
   declare html_dir=html
@@ -177,7 +177,7 @@ function albumindexhtml {
   template footer index.html
 }
 
-function generate {
+generate () {
   if [ ! -d "${INCOMING_DIR}" ]; then
     echo "ERROR: You have to create ${INCOMING_DIR} first" >&2
     exit 1
@@ -223,7 +223,7 @@ function generate {
   fi
 }
 
-function recursive {
+recursive () {
   local dir=$(cut -d: -f2 <<< $ARG1)
 
   if [ ! -d $dir ]; then
