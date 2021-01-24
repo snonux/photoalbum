@@ -3,7 +3,8 @@ NAME
     static web photo albums.
 
 SYNOPSIS
-    photoalbum clean|version|generate [rcfile] photoalbum makemake
+    photoalbum clean|generate|version|recursive:DIR [rcfile] photoalbum
+    makemake
 
     clean
         Cleans up the working space

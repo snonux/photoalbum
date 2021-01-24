@@ -1,3 +1,9 @@
+photoalbum (0.4.5) stable; urgency=low
+
+  * Remove all dependencies to Debian - it's a stand alone script now
+
+ -- Paul Buetow <paul@buetow.org>  Sun, 24 Jan 2021 14:37:01 +0000
+
 photoalbum (0.4.4) stable; urgency=low
 
   * Add README.pod for Github page

@@ -19,7 +19,7 @@ clean:
 	test -d ./bin && rm -Rf ./bin || exit 0
 	test -d ./debian/photoalbum && rm -Rf ./debian/photoalbum || exit 0
 version:
-	cut -d' ' -f2 debian/changelog | head -n 1 | sed 's/(//;s/)//' > .version
+	cut -d' ' -f2 changelog | head -n 1 | sed 's/(//;s/)//' > .version
 # Builds the documentation into a manpage
 documentation:
 	pod2man --release="$(NAME) $$(cat .version)" \
@@ -27,21 +27,11 @@ documentation:
 	pod2text ./docs/$(NAME).pod > ./docs/$(NAME).txt
 	# For github page
 	cp ./docs/$(NAME).pod README.pod
-deb: all
-	dpkg-buildpackage 
-dch: 
-	dch -i
-dput:
-	dput -u wheezy-buetowdotorg ../$(NAME)_$$(cat ./.version)_amd64.changes
-	dput -u jessie-buetowdotorg ../$(NAME)_$$(cat ./.version)_amd64.changes
-release: all dch deb dput
+release: all
 	bash -c "git tag $$(cat .version)"
 	git push --tags
 	git commit -a -m 'New release'
 	git push origin master
 clean-top:
 	rm ../$(NAME)_*.tar.gz
-	rm ../$(NAME)_*.dsc
 	rm ../$(NAME)_*.changes
-	rm ../$(NAME)_*.deb
-
