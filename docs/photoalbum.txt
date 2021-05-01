@@ -41,5 +41,5 @@ LICENSE
     See package description or project website.
 
 AUTHOR
-    Paul Buetow - <http://photoalbum.buetow.org>
+    Paul Buetow - <http://buetow.org>
 

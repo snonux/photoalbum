@@ -53,6 +53,6 @@ See package description or project website.
 
 =head1 AUTHOR
 
-Paul Buetow - <http://photoalbum.buetow.org>
+Paul Buetow - <http://buetow.org>
 
 =cut
